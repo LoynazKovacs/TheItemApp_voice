@@ -157,11 +157,30 @@ export class VoiceSpeakerComponent implements OnDestroy {
       const raw = this.text() || '';
       const isStreaming = this.streaming();
 
-      // --- Detect reset: text shrunk OR diverged from what we've seen ---
-      if (raw.length < this.streamCursor) {
-        this.resetStream();
-      } else if (this.streamPrefix && !raw.startsWith(this.streamPrefix)) {
-        this.resetStream();
+      // --- Detect reset vs. continuation ---
+      // The text feeding us can shrink WITHOUT being a new message — e.g. the
+      // parent switches `lastAssistantText` from the streaming buffer (may
+      // include trailing whitespace) to the finalised timeline entry (trimmed).
+      // Treat as "same message, shorter" iff the new raw is still a prefix of
+      // what we've seen — that means everything past raw.length was just
+      // whitespace/trim, and the cursor should be capped (not rewound).
+      // Otherwise it's a genuinely different message → soft reset.
+      if (this.streamPrefix) {
+        const cmpLen = Math.min(this.streamPrefix.length, raw.length);
+        const sameStart = cmpLen > 0 && raw.startsWith(this.streamPrefix.substring(0, cmpLen));
+        if (!sameStart) {
+          // Truly different message — drain pending chunks, but let any
+          // currently-playing audio finish naturally so we don't cut the
+          // previous message mid-word.
+          this.softResetStream();
+        } else if (raw.length < this.streamCursor) {
+          // Same message, just shorter (trim). Cap cursor so we don't
+          // re-speak the already-consumed tail.
+          this.streamCursor = raw.length;
+        }
+      } else if (raw.length < this.streamCursor) {
+        // Edge case (no prefix yet): cap to prevent re-speak.
+        this.streamCursor = raw.length;
       }
 
       const remaining = raw.substring(this.streamCursor);
@@ -262,6 +281,30 @@ export class VoiceSpeakerComponent implements OnDestroy {
   }
 
   /**
+   * Soft reset used when a NEW assistant message arrives mid-playback.
+   *
+   * Differences vs. {@link resetStream}:
+   *  - Does NOT pause `currentAudio` — the chunk that's already playing for
+   *    the previous message is allowed to finish naturally so we don't cut
+   *    it off mid-word.
+   *  - Bumps `jobId` so the pump's `while (jobId === myJob)` check trips on
+   *    the next iteration, exiting cleanly after the current chunk's
+   *    `playBlob` resolves. The `finally` block then re-kicks the pump for
+   *    any chunks of the new message that have been queued in the meantime.
+   *  - Clears the forward queue so leftover chunks from the old message
+   *    don't play after the new message has started.
+   */
+  private softResetStream(): void {
+    this.streamCursor = 0;
+    this.streamPrefix = '';
+    this.streamQueue.length = 0;
+    // Bump jobId so the running pump exits its loop after the current
+    // playBlob resolves. Do NOT pause currentAudio — let the in-flight
+    // chunk play out so the previous message ends cleanly.
+    this.jobId++;
+  }
+
+  /**
    * Drains the streaming queue. Synthesises one chunk ahead of playback so
    * audio transitions are smooth without flooding the TTS backend.
    *
@@ -324,6 +367,13 @@ export class VoiceSpeakerComponent implements OnDestroy {
       if (this.jobId === myJob) {
         this.state.set('idle');
         this.cdr.markForCheck();
+      }
+      // If we exited because jobId was bumped (soft reset for a new
+      // message), the in-flight chunk has now finished playing. Any chunks
+      // queued for the NEW message are sitting in streamQueue with no pump
+      // to drive them — re-kick so they get processed.
+      if (this.streamQueue.length > 0 && this.armed()) {
+        void this.kickPump();
       }
     }
   }
