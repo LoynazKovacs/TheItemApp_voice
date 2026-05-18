@@ -1,4 +1,6 @@
-import { Injectable } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
 
 export type VoiceInfo = Readonly<{
   id: string;
@@ -23,14 +25,25 @@ export type SttResult = Readonly<{
   error?: string;
 }>;
 
+/**
+ * Service for talking to /voice-api endpoints.
+ *
+ * Uses Angular HttpClient (not raw fetch) so the host's authInterceptor attaches
+ * the in-memory access token automatically — federated remotes can't read the
+ * `access_token` cookie because it's not always set (some sameSite/domain combos
+ * drop the cookie even though httpOnly:false). HttpClient is shared via Native
+ * Federation `singleton: true` so the host interceptor fires for our requests.
+ */
 @Injectable({ providedIn: 'root' })
 export class VoiceApiService {
+  private readonly http = inject(HttpClient);
   private readonly baseUrl = '/voice-api';
 
   async health(): Promise<{ ok: boolean; upstreams?: any; error?: string }> {
     try {
-      const res = await fetch(`${this.baseUrl}/api/upstreams/health`, { headers: this.authHeaders() });
-      return await res.json();
+      return await firstValueFrom(
+        this.http.get<{ ok: boolean; upstreams?: any; error?: string }>(`${this.baseUrl}/api/upstreams/health`),
+      );
     } catch (err) {
       return { ok: false, error: err instanceof Error ? err.message : String(err) };
     }
@@ -38,36 +51,41 @@ export class VoiceApiService {
 
   async listVoices(): Promise<{ ok: boolean; voices: VoiceInfo[]; error?: string }> {
     try {
-      const res = await fetch(`${this.baseUrl}/api/voices`, { headers: this.authHeaders() });
-      return await res.json();
+      return await firstValueFrom(
+        this.http.get<{ ok: boolean; voices: VoiceInfo[]; error?: string }>(`${this.baseUrl}/api/voices`),
+      );
     } catch (err) {
       return { ok: false, voices: [], error: err instanceof Error ? err.message : String(err) };
     }
   }
 
-  /** TTS — returns a Blob (audio/<format>) on success, throws on failure. */
+  /** TTS — returns a Blob (audio/<format>) on success. */
   async tts(req: TtsRequest): Promise<{ ok: true; blob: Blob; mime: string } | { ok: false; error: string }> {
     try {
-      const res = await fetch(`${this.baseUrl}/api/tts`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...this.authHeaders() },
-        body: JSON.stringify(req),
-      });
-      if (!res.ok) {
-        let detail = '';
-        try {
-          const j = await res.json();
-          detail = j.error || j.message || JSON.stringify(j);
-        } catch {
-          detail = await res.text().catch(() => '');
-        }
-        return { ok: false, error: `TTS failed: ${res.status} ${detail}` };
-      }
+      const res = await firstValueFrom(
+        this.http.post(`${this.baseUrl}/api/tts`, req, {
+          observe: 'response',
+          responseType: 'blob',
+        }),
+      );
+      const blob = res.body ?? new Blob();
       const mime = res.headers.get('content-type') || 'audio/mpeg';
-      const blob = await res.blob();
       return { ok: true, blob, mime };
-    } catch (err) {
-      return { ok: false, error: err instanceof Error ? err.message : String(err) };
+    } catch (err: any) {
+      // HttpErrorResponse carries the response body either as a parsed JSON object
+      // or as a Blob (because we requested responseType: 'blob'). Surface whatever
+      // text we can extract so the UI shows a useful error.
+      let detail = '';
+      if (err?.error instanceof Blob) {
+        try { detail = await err.error.text(); } catch { /* ignore */ }
+      } else if (typeof err?.error === 'string') {
+        detail = err.error;
+      } else if (err?.error?.error) {
+        detail = err.error.error;
+      } else if (err instanceof Error) {
+        detail = err.message;
+      }
+      return { ok: false, error: `TTS failed: ${err?.status ?? ''} ${detail || ''}`.trim() };
     }
   }
 
@@ -78,30 +96,12 @@ export class VoiceApiService {
       form.append('audio', audio, opts.filename || 'recording.webm');
       if (opts.language) form.append('language', opts.language);
       if (opts.task) form.append('task', opts.task);
-
-      const res = await fetch(`${this.baseUrl}/api/stt`, {
-        method: 'POST',
-        headers: { ...this.authHeaders() },
-        body: form,
-      });
-      const json = await res.json().catch(() => null);
-      if (!res.ok) {
-        return { ok: false, error: json?.error || json?.message || `STT failed: ${res.status}` };
-      }
-      return json as SttResult;
-    } catch (err) {
-      return { ok: false, error: err instanceof Error ? err.message : String(err) };
+      // Let the browser set the multipart boundary by leaving Content-Type unset.
+      const res = await firstValueFrom(this.http.post<SttResult>(`${this.baseUrl}/api/stt`, form));
+      return res;
+    } catch (err: any) {
+      const detail = err?.error?.error || err?.error?.message || (err instanceof Error ? err.message : 'STT failed');
+      return { ok: false, error: detail };
     }
-  }
-
-  private getAccessToken(): string | null {
-    if (typeof document === 'undefined') return null;
-    const match = document.cookie.match(/(?:^|;\s*)access_token=([^;]*)/);
-    return match ? decodeURIComponent(match[1]) : null;
-  }
-
-  private authHeaders(): Record<string, string> {
-    const t = this.getAccessToken();
-    return t ? { Authorization: `Bearer ${t}` } : {};
   }
 }

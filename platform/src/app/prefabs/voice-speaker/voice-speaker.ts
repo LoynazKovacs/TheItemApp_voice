@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, effect, inject, input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { VoiceApiService } from '../../services/voice-api.service';
 
@@ -24,64 +24,286 @@ export class VoiceSpeakerComponent implements OnDestroy {
   readonly format = input<'mp3' | 'wav' | 'opus' | 'flac' | 'aac' | 'pcm'>('mp3');
   readonly speed = input<number>(1.0);
   readonly label = input<string>('Speak');
+  /**
+   * When `true`, the button behaves as a toggle:
+   *  - First click ARMS the speaker (visually highlighted) and plays the
+   *    current `text()` immediately.
+   *  - While armed, every subsequent change of `text()` to a new non-empty
+   *    value is spoken automatically.
+   *  - Next click DISARMS, stops any ongoing playback, and reverts to idle.
+   *
+   * When `false` (default), the original one-shot behaviour is preserved
+   * for stand-alone consumers (e.g. voice-studio).
+   */
+  readonly autoMode = input<boolean>(false);
+  /**
+   * When `true`, the speaker treats `text()` as a growing buffer (assistant
+   * message currently streaming) and only extracts COMPLETE sentences from
+   * past the last-consumed cursor — synthesising and playing each as soon
+   * as it arrives, well before the full reply is finished rendering.
+   *
+   * When this transitions back to `false` while there's still un-consumed
+   * tail past the cursor, the remainder is flushed as a final chunk.
+   *
+   * Only meaningful in conjunction with `autoMode === true`.
+   */
+  readonly streaming = input<boolean>(false);
 
   state = signal<'idle' | 'loading' | 'playing'>('idle');
   lastError = signal<string | null>(null);
+  /** True while auto-mode is engaged. Only meaningful when autoMode()===true. */
+  armed = signal<boolean>(false);
 
   private currentAudio: HTMLAudioElement | null = null;
   private currentUrl: string | null = null;
+  /** Tracks the last text we played in auto-mode to avoid replays on no-op changes. */
+  private lastAutoSpoken = '';
+  /**
+   * Monotonically increments whenever a new playback "job" is started. Long
+   * playbacks (chunked text) check this token between chunks and abort if the
+   * user has stopped/restarted the speaker — prevents stale chunks playing
+   * after a manual stop or a fresher assistant reply.
+   */
+  private jobId = 0;
+
+  /* ---- Streaming-queue state (auto-mode only) ----------------------- */
+  /** Characters of text() already extracted into the streamQueue. */
+  private streamCursor = 0;
+  /** First ~64 chars of the text() value we last advanced past — used to
+   *  detect "different message" vs "continuation". */
+  private streamPrefix = '';
+  /** FIFO of chunk strings waiting to be synthesised + played. */
+  private streamQueue: string[] = [];
+  /** True while the pump loop is running. */
+  private pumping = false;
+
+  constructor() {
+    // Streaming extractor: watches text() (and streaming() flag) while armed
+    // and queues newly-arrived complete sentences for playback.
+    effect(() => {
+      if (!this.autoMode() || !this.armed()) return;
+      const raw = this.text() || '';
+      const isStreaming = this.streaming();
+
+      // --- Detect reset: text shrunk OR diverged from what we've seen ---
+      if (raw.length < this.streamCursor) {
+        this.resetStream();
+      } else if (this.streamPrefix && !raw.startsWith(this.streamPrefix)) {
+        this.resetStream();
+      }
+
+      const remaining = raw.substring(this.streamCursor);
+      if (!remaining) return;
+
+      // --- Find safe split point ---
+      let splitAt = -1;
+      if (!isStreaming) {
+        // Streaming ended → flush whatever's left as the final chunk.
+        splitAt = remaining.length;
+      } else {
+        // Look for last sentence-end punctuation followed by whitespace,
+        // or a paragraph break.
+        const re = /[.!?]+["')\]]*\s+/g;
+        let lastEnd = -1;
+        let m: RegExpExecArray | null;
+        while ((m = re.exec(remaining)) !== null) {
+          lastEnd = m.index + m[0].length;
+        }
+        const para = remaining.lastIndexOf('\n\n');
+        if (para >= 0) lastEnd = Math.max(lastEnd, para + 2);
+        if (lastEnd > 0) splitAt = lastEnd;
+      }
+
+      if (splitAt <= 0) return;
+      const chunkText = remaining.substring(0, splitAt).trim();
+      this.streamCursor += splitAt;
+      this.streamPrefix = raw.substring(0, Math.min(64, raw.length));
+      // Skip chunks with no speakable letters (Kokoro chokes on "---" etc.).
+      if (!chunkText || !/\p{L}|\p{N}/u.test(chunkText)) return;
+      this.streamQueue.push(chunkText);
+      void this.kickPump();
+    });
+  }
+
+  private resetStream(): void {
+    this.streamCursor = 0;
+    this.streamPrefix = '';
+    this.streamQueue.length = 0;
+    // Abort any in-flight playback / pump.
+    this.jobId++;
+    try { this.currentAudio?.pause(); } catch { /* noop */ }
+    this.cleanup();
+    this.pumping = false;
+    this.state.set('idle');
+    this.cdr.markForCheck();
+  }
+
+  /**
+   * Drains the streaming queue. Synthesises one chunk ahead of playback so
+   * audio transitions are smooth without flooding the TTS backend.
+   *
+   * Pre-fire discipline: any time the queue has an unfired head and we have
+   * no `nextSynth` in flight, fire it. We check at three points per
+   * iteration — before awaiting current synth, before playback, and after
+   * playback — so chunks that arrive DURING synth-wait or DURING playback
+   * still get their TTS started in the background instead of stalling the
+   * pipeline.
+   */
+  private async kickPump(): Promise<void> {
+    if (this.pumping) return;
+    this.pumping = true;
+    const myJob = ++this.jobId;
+    this.state.set('loading');
+    this.cdr.markForCheck();
+    const fireSynth = (chunk: string) => this.api.tts({
+      text: chunk,
+      voice: this.voice() || undefined,
+      format: this.format(),
+      speed: this.speed(),
+    });
+    let nextSynth: Promise<{ ok: boolean; blob?: Blob; error?: string }> | null = null;
+    // Tracks the queue index whose synth is held in nextSynth. After we
+    // shift() the head, the held promise corresponds to what is now
+    // queue[-1] (consumed) — so we reset and re-arm against the new head.
+    try {
+      while (this.streamQueue.length && this.armed() && this.jobId === myJob) {
+        const chunk = this.streamQueue.shift()!;
+        const cur = nextSynth ?? fireSynth(chunk);
+        nextSynth = null;
+        // Pre-fire NEXT chunk if queue already has more (covers immediate-
+        // play / multi-sentence-burst case).
+        if (this.streamQueue.length > 0) nextSynth = fireSynth(this.streamQueue[0]);
+
+        const res = await cur;
+        if (this.jobId !== myJob || !this.armed()) break;
+        // Pre-fire again — new chunks may have arrived during the synth wait.
+        if (this.streamQueue.length > 0 && !nextSynth) {
+          nextSynth = fireSynth(this.streamQueue[0]);
+        }
+
+        if (!res.ok || !res.blob) {
+          const errMsg = !res.ok ? res.error : 'no blob';
+          console.warn('[voice-speaker] skipped chunk due to TTS failure:', errMsg, chunk);
+          continue;
+        }
+        await this.playBlob(res.blob, myJob);
+        if (this.jobId !== myJob || !this.armed()) break;
+        // Pre-fire again — chunks that arrived during PLAYBACK are by far
+        // the most common case in real-time streaming. Without this, the
+        // next iteration would have to wait a full TTS round-trip with no
+        // audio, defeating the whole point of the one-ahead pipeline.
+        if (this.streamQueue.length > 0 && !nextSynth) {
+          nextSynth = fireSynth(this.streamQueue[0]);
+        }
+      }
+    } finally {
+      this.pumping = false;
+      if (this.jobId === myJob) {
+        this.state.set('idle');
+        this.cdr.markForCheck();
+      }
+    }
+  }
 
   ngOnDestroy(): void {
     this.cleanup();
   }
 
   async onClick() {
-    if (this.state() === 'playing') {
-      this.stop();
+    // Auto-mode: clicks ARM/DISARM the toggle instead of one-shot play.
+    if (this.autoMode()) {
+      if (this.armed()) {
+        this.armed.set(false);
+        this.stop();
+        this.resetStream();
+        return;
+      }
+      // Arm WITHOUT speaking the current text — only future updates of
+      // text() should trigger TTS. Seed the stream cursor at the END of
+      // the current text so the existing content is treated as
+      // already-heard.
+      const cur = this.text() || '';
+      this.streamCursor = cur.length;
+      this.streamPrefix = cur.substring(0, Math.min(64, cur.length));
+      this.streamQueue.length = 0;
+      this.lastAutoSpoken = cur.trim();
+      this.armed.set(true);
       return;
     }
-    if (this.state() !== 'idle') return;
+    await this.playNow();
+  }
+
+  /**
+   * Plays the current text. Splits long text into smaller chunks (paragraphs
+   * → sentences) so the first audio starts as quickly as possible, and runs
+   * a one-ahead pipeline (synthesise chunk N+1 while chunk N is playing) to
+   * minimise gaps and keep backend load bounded.
+   */
+  private async playNow(): Promise<void> {
+    if (this.state() === 'playing' || this.state() === 'loading') {
+      this.stop();
+      // fall through to start a fresh job
+    }
     const text = (this.text() || '').trim();
     if (!text) {
       this.lastError.set('No text to speak');
       return;
     }
+    this.lastAutoSpoken = text;
     this.lastError.set(null);
+    const chunks = this.chunkText(text);
+    if (chunks.length === 0) return;
+
+    const myJob = ++this.jobId;
     this.state.set('loading');
     this.cdr.markForCheck();
-    try {
-      const res = await this.api.tts({
-        text,
+
+    // One-ahead synth pipeline. We fire synth for chunk i while chunk i-1
+    // is still playing — keeps audio gap small without flooding backend.
+    const pending: Array<Promise<{ ok: boolean; blob?: Blob; error?: string }>> = [];
+    const synth = (chunkText: string) =>
+      this.api.tts({
+        text: chunkText,
         voice: this.voice() || undefined,
         format: this.format(),
         speed: this.speed(),
       });
-      if (!res.ok) {
-        this.lastError.set(res.error);
-        this.state.set('idle');
-        this.cdr.markForCheck();
-        return;
+
+    // Kick off synth for chunk 0 immediately, chunk 1 right behind it.
+    pending.push(synth(chunks[0]));
+    if (chunks.length > 1) pending.push(synth(chunks[1]));
+
+    try {
+      let skipped = 0;
+      for (let i = 0; i < chunks.length; i++) {
+        if (this.jobId !== myJob) return; // aborted
+        const res = await pending[i];
+        if (this.jobId !== myJob) return;
+        // Pre-fetch the chunk after next so the pipeline stays one-ahead —
+        // do this BEFORE handling a failure so subsequent chunks keep flowing.
+        const nextNext = i + 2;
+        if (nextNext < chunks.length && pending.length <= nextNext) {
+          pending.push(synth(chunks[nextNext]));
+        }
+        if (!res.ok || !res.blob) {
+          // Skip just this chunk and continue with the next — Kokoro
+          // occasionally fails on edge cases (e.g. very short or
+          // unusual-character chunks) and aborting the whole queue is worse
+          // UX than missing a sentence.
+          skipped++;
+          console.warn('[voice-speaker] skipped chunk due to TTS failure:', res.error, chunks[i]);
+          continue;
+        }
+        await this.playBlob(res.blob, myJob);
+        if (this.jobId !== myJob) return;
       }
-      this.cleanup();
-      const url = URL.createObjectURL(res.blob);
-      const audio = new Audio(url);
-      audio.onended = () => {
-        this.cleanup();
-        this.state.set('idle');
-        this.cdr.markForCheck();
-      };
-      audio.onerror = () => {
-        this.lastError.set('Audio playback failed');
-        this.cleanup();
-        this.state.set('idle');
-        this.cdr.markForCheck();
-      };
-      this.currentAudio = audio;
-      this.currentUrl = url;
-      this.state.set('playing');
+      if (skipped > 0) {
+        this.lastError.set(`Skipped ${skipped} section${skipped > 1 ? 's' : ''} (TTS failed)`);
+      }
+      this.state.set('idle');
       this.cdr.markForCheck();
-      await audio.play();
     } catch (err) {
+      if (this.jobId !== myJob) return;
       this.lastError.set(err instanceof Error ? err.message : String(err));
       this.cleanup();
       this.state.set('idle');
@@ -89,7 +311,68 @@ export class VoiceSpeakerComponent implements OnDestroy {
     }
   }
 
+  /**
+   * Splits text into TTS-friendly chunks:
+   *  1. Splits by blank lines first → paragraph-level chunks.
+   *  2. Any paragraph longer than `MAX_CHARS` is further split by sentence
+   *     boundaries (`. `, `! `, `? `), buffering short sentences together
+   *     up to `MAX_CHARS` so we don't fire one TTS call per fragment.
+   */
+  private chunkText(text: string): string[] {
+    const MAX_CHARS = 280;
+    // Drop chunks that don't actually contain any speakable letters. Kokoro
+    // throws "list index out of range" on inputs like "---", "***", "•••",
+    // pure punctuation, or whitespace-only fragments.
+    const speakable = (s: string) => /\p{L}|\p{N}/u.test(s);
+    const paragraphs = text
+      .split(/\n\s*\n/)
+      .map(p => p.trim())
+      .filter(p => p && speakable(p));
+    const out: string[] = [];
+    for (const p of paragraphs) {
+      if (p.length <= MAX_CHARS) {
+        out.push(p);
+        continue;
+      }
+      // Match sentence-ish runs ending in . ! ? (keep trailing whitespace),
+      // OR the trailing fragment with no terminator.
+      const sentences = p.match(/[^.!?\n]+[.!?]+["')\]]*\s*|[^.!?\n]+$/g) ?? [p];
+      let buf = '';
+      for (const s of sentences) {
+        if (buf && (buf.length + s.length) > MAX_CHARS) {
+          if (speakable(buf)) out.push(buf.trim());
+          buf = '';
+        }
+        buf += s;
+      }
+      if (buf.trim() && speakable(buf)) out.push(buf.trim());
+    }
+    return out;
+  }
+
+  private playBlob(blob: Blob, myJob: number): Promise<void> {
+    return new Promise<void>(resolve => {
+      if (this.jobId !== myJob) { resolve(); return; }
+      this.cleanup();
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      audio.onended = () => { this.cleanup(); resolve(); };
+      audio.onerror = () => {
+        this.lastError.set('Audio playback failed');
+        this.cleanup();
+        resolve();
+      };
+      this.currentAudio = audio;
+      this.currentUrl = url;
+      this.state.set('playing');
+      this.cdr.markForCheck();
+      audio.play().catch(() => { this.cleanup(); resolve(); });
+    });
+  }
+
   stop() {
+    // Bumping jobId aborts any in-flight chunk queue.
+    this.jobId++;
     try { this.currentAudio?.pause(); } catch { /* noop */ }
     this.cleanup();
     this.state.set('idle');

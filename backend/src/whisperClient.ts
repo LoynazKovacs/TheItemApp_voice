@@ -52,14 +52,21 @@ export class WhisperClient {
       throw new Error(`[WhisperClient] ${response.status}: ${text.slice(0, 500)}`);
     }
 
-    const contentType = response.headers.get('content-type') || '';
-    if (contentType.includes('application/json')) {
-      const data = await response.json() as { text?: unknown };
-      const text = typeof data.text === 'string' ? data.text.trim() : '';
-      return { text, raw: data };
+    // The webservice claims `output=json` returns JSON, but the response
+    // content-type is often `text/plain` regardless. Try to parse the body as
+    // JSON first; fall back to plain text only if that fails.
+    const body = await response.text();
+    const trimmed = body.trim();
+    if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+      try {
+        const data = JSON.parse(trimmed) as { text?: unknown };
+        const text = typeof data.text === 'string' ? data.text.trim() : '';
+        return { text, raw: data };
+      } catch {
+        /* fall through to plain-text handling */
+      }
     }
-    const text = (await response.text()).trim();
-    return { text, raw: { text } };
+    return { text: trimmed, raw: { text: trimmed } };
   }
 
   private async fetchWithTimeout(path: string, init: RequestInit): Promise<Response> {

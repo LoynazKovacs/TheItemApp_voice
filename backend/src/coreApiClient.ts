@@ -38,7 +38,7 @@ export class CoreApiClient {
 
   async verifyAuth(authorization?: string, cookie?: string): Promise<boolean> {
     try {
-      const res = await fetch(`${this.baseUrl}/api/auth/profile`, {
+      const res = await fetch(`${this.baseUrl}/api/auth/me`, {
         method: 'GET',
         headers: this.requestHeaders(authorization, cookie),
       });
