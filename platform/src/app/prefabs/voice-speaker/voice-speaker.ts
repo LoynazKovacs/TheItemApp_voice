@@ -1,6 +1,64 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, effect, inject, input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { VoiceApiService } from '../../services/voice-api.service';
+import { RefResolverService } from '../../services/ref-resolver.service';
+
+/**
+ * Strip markdown / agent-protocol noise that doesn't read well in TTS:
+ *  - chip-ref tokens like `coding_agent_repos/6a0b2f5987da4709ea3c4b5e`
+ *    (the UI renders these as clickable pills — Kokoro would otherwise
+ *    spell them character-by-character)
+ *  - inline code spans (commit SHAs, code snippets, identifiers)
+ *  - bare hex tokens of 7+ chars (commit SHAs sitting outside backticks)
+ *  - URLs (read as a stream of letters and slashes)
+ *  - markdown emphasis markers (**bold**, *italic*, __u__, _u_)
+ *  - bullet / heading / blockquote line prefixes
+ *  - em-dash / line-leading dashes that get vocalised as "dash"
+ *  - collapse runs of whitespace inside a line
+ *
+ * Operates per-chunk so the cursor in the original raw text is unaffected.
+ */
+export function sanitizeForTts(input: string, refLabels?: Map<string, string> | Record<string, string>): string {
+  let s = input;
+  const lookup = (ref: string): string | undefined => {
+    if (!refLabels) return undefined;
+    if (refLabels instanceof Map) return refLabels.get(ref) || refLabels.get(ref.toLowerCase());
+    return refLabels[ref] || refLabels[ref.toLowerCase()];
+  };
+  // Chip refs: optional surrounding parens. If we have a friendly label
+  // cached for the ref, substitute it so the listener hears the record's
+  // name; otherwise strip silently (avoids spelling out 24 hex chars).
+  s = s.replace(/\(\s*([a-z_][a-z0-9_]*\/[0-9a-f]{24})\s*\)/gi, (_m, ref: string) => {
+    const label = lookup(ref);
+    return label ? `(${label})` : '';
+  });
+  s = s.replace(/[a-z_][a-z0-9_]*\/[0-9a-f]{24}/gi, (m: string) => {
+    const label = lookup(m);
+    return label ? label : '';
+  });
+  // Inline code spans — drop whole span (often IDs / code / shell commands).
+  s = s.replace(/`[^`]+`/g, '');
+  // Bare hex SHA-like tokens (7-40 hex chars, must contain at least one digit
+  // OR be at least 7 chars — avoid swallowing real English hex-only words).
+  s = s.replace(/\b[0-9a-f]{7,40}\b/gi, m => /\d/.test(m) ? '' : m);
+  // URLs.
+  s = s.replace(/https?:\/\/\S+/gi, '');
+  // Markdown emphasis (keep inner text).
+  s = s.replace(/\*\*([^*]+)\*\*/g, '$1');
+  s = s.replace(/__([^_]+)__/g, '$1');
+  s = s.replace(/(?<![\w*])\*(?!\s)([^*\n]+?)\*(?![\w*])/g, '$1');
+  s = s.replace(/(?<![\w_])_(?!\s)([^_\n]+?)_(?![\w_])/g, '$1');
+  // Strip line-leading bullets / headings / blockquotes / em-dashes.
+  s = s.replace(/^[ \t]*[-*•][ \t]+/gm, '');
+  s = s.replace(/^[ \t]*#{1,6}[ \t]+/gm, '');
+  s = s.replace(/^[ \t]*>+[ \t]?/gm, '');
+  s = s.replace(/^[ \t]*[—–-][ \t]+/gm, '');
+  // Collapse horizontal whitespace runs.
+  s = s.replace(/[ \t]+/g, ' ');
+  // Collapse blank-line runs to a single blank line.
+  s = s.replace(/\n{3,}/g, '\n\n');
+  return s;
+}
 
 /**
  * Speaker button: synthesizes provided `text` on demand and plays it back.
@@ -16,6 +74,7 @@ import { VoiceApiService } from '../../services/voice-api.service';
 })
 export class VoiceSpeakerComponent implements OnDestroy {
   private readonly api = inject(VoiceApiService);
+  private readonly refs = inject(RefResolverService);
   private readonly cdr = inject(ChangeDetectorRef);
 
   readonly windowId = input<string>('');
@@ -77,6 +136,19 @@ export class VoiceSpeakerComponent implements OnDestroy {
   /** True while the pump loop is running. */
   private pumping = false;
 
+  /**
+   * Cache of chip-ref → display label. Populated on demand by
+   * `ensureRefsResolved()`. Misses (record not found / unauthorized) are
+   * stored as empty string so we don't re-fetch them on every chunk.
+   */
+  private readonly refCache = new Map<string, string>();
+  /**
+   * Serialises async ref-resolution + queue pushes inside the streaming
+   * effect so chunks remain in arrival order even when one slice's resolve
+   * promise takes longer than the next's.
+   */
+  private sliceChain: Promise<void> = Promise.resolve();
+
   constructor() {
     // Streaming extractor: watches text() (and streaming() flag) while armed
     // and queues newly-arrived complete sentences for playback.
@@ -111,18 +183,69 @@ export class VoiceSpeakerComponent implements OnDestroy {
         }
         const para = remaining.lastIndexOf('\n\n');
         if (para >= 0) lastEnd = Math.max(lastEnd, para + 2);
+        // Fallback: if no sentence/paragraph break found AND the remaining
+        // buffer is getting long, split at the last single-line break.
+        // Without this, markdown bullet lists (no `. ` between bullets)
+        // accumulate as one giant chunk, creating long silence gaps.
+        if (lastEnd <= 0 && remaining.length > 140) {
+          const nl = remaining.lastIndexOf('\n');
+          if (nl > 0) lastEnd = nl + 1;
+        }
         if (lastEnd > 0) splitAt = lastEnd;
       }
 
       if (splitAt <= 0) return;
-      const chunkText = remaining.substring(0, splitAt).trim();
+      const rawSlice = remaining.substring(0, splitAt);
+      // Cursor advances along the RAW text — sanitisation only affects what
+      // we send to TTS, not what we consider "consumed". We bump the cursor
+      // synchronously here so the effect doesn't re-fire on the same slice
+      // while we're awaiting ref resolution.
       this.streamCursor += splitAt;
       this.streamPrefix = raw.substring(0, Math.min(64, raw.length));
-      // Skip chunks with no speakable letters (Kokoro chokes on "---" etc.).
-      if (!chunkText || !/\p{L}|\p{N}/u.test(chunkText)) return;
-      this.streamQueue.push(chunkText);
-      void this.kickPump();
+      const jobAtQueue = this.jobId;
+      // Chain the ref-resolution + queue push so chunks remain in order
+      // even when one slice's resolve takes longer than the next.
+      this.sliceChain = this.sliceChain.then(async () => {
+        if (this.jobId !== jobAtQueue || !this.armed()) return;
+        await this.ensureRefsResolved(rawSlice);
+        if (this.jobId !== jobAtQueue || !this.armed()) return;
+        const chunkText = sanitizeForTts(rawSlice, this.refCache).trim();
+        // Skip chunks with no speakable letters (Kokoro chokes on "---" etc.,
+        // and post-sanitisation a chunk that was pure IDs/code may end up
+        // empty — silently drop those).
+        if (!chunkText || !/\p{L}|\p{N}/u.test(chunkText)) return;
+        this.streamQueue.push(chunkText);
+        void this.kickPump();
+      }).catch(() => { /* swallow — keep chain alive */ });
     });
+  }
+
+  /**
+   * Find every `modelKey/24hex` chip ref in `text` and resolve them via the
+   * frontend `RefResolverService` (mirrors the chip renderer's
+   * `ui.display.templates` so what the listener hears matches what they see).
+   * Misses are stored as empty string sentinel so the sanitiser strips them
+   * silently without re-fetching.
+   */
+  private async ensureRefsResolved(text: string): Promise<void> {
+    if (!text) return;
+    const REF_RE = /[a-z_][a-z0-9_]*\/[0-9a-f]{24}/gi;
+    const found: string[] = [];
+    const seen = new Set<string>();
+    let m: RegExpExecArray | null;
+    while ((m = REF_RE.exec(text)) !== null) {
+      const ref = m[0];
+      if (seen.has(ref) || this.refCache.has(ref)) continue;
+      seen.add(ref);
+      found.push(ref);
+    }
+    if (!found.length) return;
+    const labels = await this.refs.resolve(found);
+    for (const ref of found) {
+      const label = labels.get(ref);
+      // Empty string sentinel = lookup completed but no label → strip.
+      this.refCache.set(ref, typeof label === 'string' ? label : '');
+    }
   }
 
   private resetStream(): void {
@@ -244,13 +367,19 @@ export class VoiceSpeakerComponent implements OnDestroy {
       this.stop();
       // fall through to start a fresh job
     }
-    const text = (this.text() || '').trim();
-    if (!text) {
+    const rawText = (this.text() || '').trim();
+    if (!rawText) {
       this.lastError.set('No text to speak');
       return;
     }
-    this.lastAutoSpoken = text;
+    this.lastAutoSpoken = rawText;
     this.lastError.set(null);
+    // Resolve chip refs → friendly labels BEFORE sanitising so the listener
+    // hears the record's name (e.g. "voice" repo) instead of the raw id.
+    await this.ensureRefsResolved(rawText);
+    // Sanitise BEFORE chunking so we don't waste a chunk slot on noise.
+    const text = sanitizeForTts(rawText, this.refCache).trim();
+    if (!text) return;
     const chunks = this.chunkText(text);
     if (chunks.length === 0) return;
 
