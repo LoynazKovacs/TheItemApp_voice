@@ -1,0 +1,107 @@
+{
+  "version": 2,
+  "appKey": "voice",
+  "appVersion": "1.0.0",
+  "engineRequires": ">=1.0.0",
+  "requiresCore": true,
+  "collections": [
+    {
+      "collection": "apps",
+      "file": "apps.json",
+      "matchBy": "key",
+      "installMode": "shared",
+      "exportFields": ["key", "name", "description", "icon", "enabled", "groupIds", "cantDelete"],
+      "filter": { "key": "voice" }
+    },
+    {
+      "collection": "items",
+      "file": "items.json",
+      "matchBy": "key",
+      "installMode": "shared",
+      "exportFields": [
+        "key",
+        "collection",
+        "title",
+        "titleSingular",
+        "titlePlural",
+        "description",
+        "ai",
+        "icon",
+        "appId",
+        "behavior",
+        "schema",
+        "ui",
+        "api",
+        "auth",
+        "tier",
+        "kind",
+        "meta"
+      ],
+      "filter": { "appId": "<thisAppId>" }
+    },
+    {
+      "collection": "prefabs",
+      "file": "prefabs.json",
+      "matchBy": "_id",
+      "installMode": "shared",
+      "exportFields": [
+        "key",
+        "title",
+        "description",
+        "icon",
+        "type",
+        "displayType",
+        "reserved",
+        "frontend",
+        "defaultTile"
+      ]
+    },
+    {
+      "collection": "dashboards",
+      "file": "dashboards.json",
+      "matchBy": "_id",
+      "installMode": "installConfig",
+      "exportFields": [
+        "appId",
+        "name",
+        "icon",
+        "isHome",
+        "statusId",
+        "interactive",
+        "groupIds",
+        "gridsterConfigId",
+        "tiles"
+      ],
+      "filter": { "appId": "<thisAppId>" }
+    },
+    {
+      "collection": "windows",
+      "file": "windows.json",
+      "matchBy": "_id",
+      "installMode": "installConfig",
+      "exportFields": [
+        "dashboardId",
+        "title",
+        "icon",
+        "groupIds",
+        "modelId",
+        "prefabId",
+        "prefabConfig",
+        "sort"
+      ]
+    }
+  ],
+  "routes": [
+    {
+      "type": "federation-remote",
+      "pathPrefix": "/mf/voice",
+      "upstream": "voice:80"
+    },
+    {
+      "type": "api-proxy",
+      "pathPrefix": "/voice-api",
+      "upstream": "voice-api:3005",
+      "readTimeout": "5m"
+    }
+  ]
+}

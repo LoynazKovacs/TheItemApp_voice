@@ -1,0 +1,103 @@
+<div class="studio">
+  <header class="studioHeader">
+    <h2>Voice Studio</h2>
+    <div class="statusRow">
+      <span class="statusPill" [class.ok]="ttsStatus().state === 'ok'" [class.down]="ttsStatus().state === 'down'">
+        TTS:
+        @switch (ttsStatus().state) {
+          @case ('ok') { online }
+          @case ('down') { down }
+          @default { …  }
+        }
+      </span>
+      <span class="statusPill" [class.ok]="sttStatus().state === 'ok'" [class.down]="sttStatus().state === 'down'">
+        STT:
+        @switch (sttStatus().state) {
+          @case ('ok') { online }
+          @case ('down') { down }
+          @default { …  }
+        }
+      </span>
+      <button class="ghostBtn" type="button" (click)="refreshHealth()" [disabled]="healthLoading()">
+        {{ healthLoading() ? 'Checking...' : 'Refresh' }}
+      </button>
+    </div>
+  </header>
+
+  <section class="panel">
+    <h3>Speak (TTS)</h3>
+
+    <label class="field">
+      <span>Text</span>
+      <textarea
+        rows="4"
+        [ngModel]="text()"
+        (ngModelChange)="setText($event)"
+        placeholder="Type something to speak..."
+      ></textarea>
+    </label>
+
+    <div class="row">
+      <label class="field grow">
+        <span>Voice</span>
+        @if (voicesLoading()) {
+          <div class="hint">Loading voices...</div>
+        } @else if (voicesError()) {
+          <div class="err">{{ voicesError() }}</div>
+        } @else if (voices().length === 0) {
+          <div class="hint">No voices reported</div>
+        } @else {
+          <select [ngModel]="selectedVoice()" (ngModelChange)="setVoice($event)">
+            @for (v of voices(); track v.id) {
+              <option [value]="v.id">{{ voiceLabel(v) }}</option>
+            }
+          </select>
+        }
+      </label>
+
+      <label class="field">
+        <span>Speed</span>
+        <input
+          type="number"
+          min="0.5"
+          max="2.0"
+          step="0.05"
+          [ngModel]="speed()"
+          (ngModelChange)="setSpeed($event)"
+        />
+      </label>
+    </div>
+
+    <voice-speaker
+      [text]="text()"
+      [voice]="selectedVoice()"
+      [speed]="speed()"
+      [format]="'mp3'"
+      [label]="'Play'"
+    />
+  </section>
+
+  <section class="panel">
+    <h3>Listen (STT)</h3>
+    <p class="hint">Hold the button while speaking. Release to transcribe.</p>
+    <voice-mic-button (transcribed)="onTranscribed($event)" />
+
+    @if (transcripts().length > 0) {
+      <div class="transcripts">
+        <div class="transHeader">
+          <strong>Transcripts</strong>
+          <button class="ghostBtn" type="button" (click)="clearTranscripts()">Clear</button>
+        </div>
+        <ul>
+          @for (item of transcripts(); track item.at) {
+            <li>
+              <span class="when">{{ item.at | date:'HH:mm:ss' }}</span>
+              <span class="what">{{ item.text }}</span>
+              <button class="ghostBtn small" type="button" (click)="copyToInput(item.text)">→ TTS</button>
+            </li>
+          }
+        </ul>
+      </div>
+    }
+  </section>
+</div>

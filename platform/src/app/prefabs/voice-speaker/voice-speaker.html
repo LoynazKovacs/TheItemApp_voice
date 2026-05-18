@@ -1,0 +1,16 @@
+<button
+  class="speakBtn"
+  [class.busy]="state() !== 'idle'"
+  [disabled]="state() === 'loading' || !text()"
+  (click)="onClick()"
+>
+  @switch (state()) {
+    @case ('loading') { Synthesizing... }
+    @case ('playing') { Stop }
+    @default { {{ label() }} }
+  }
+</button>
+
+@if (lastError(); as err) {
+  <p class="err">{{ err }}</p>
+}

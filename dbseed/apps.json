@@ -1,0 +1,15 @@
+[
+  {
+    "_id": { "$oid": "860000000000000000000001" },
+    "key": "voice",
+    "name": "Voice",
+    "description": "Text-to-speech and speech-to-text studio. Provides federated prefabs (mic button, speaker toggle, studio) that any app can drop in to give users a voice.",
+    "icon": "lucide:mic",
+    "enabled": true,
+    "groupIds": [
+      { "$oid": "7000000000000000001d0001" },
+      { "$oid": "7000000000000000001d0002" }
+    ],
+    "cantDelete": false
+  }
+]

@@ -1,0 +1,34 @@
+[
+  {
+    "_id": { "$oid": "860000000000000000010001" },
+    "appId": { "$oid": "860000000000000000000001" },
+    "name": "Voice Studio",
+    "icon": "lucide:mic",
+    "isHome": true,
+    "statusId": { "$oid": "700000000000000000140001" },
+    "groupIds": [
+      { "$oid": "7000000000000000001d0001" },
+      { "$oid": "7000000000000000001d0002" }
+    ],
+    "gridsterConfigId": { "$oid": "700000000000000000050004" },
+    "tiles": [
+      {
+        "windowId": { "$oid": "860000000000000000020001" },
+        "x": 0,
+        "y": 0,
+        "cols": 3,
+        "rows": 2,
+        "slot": {
+          "key": "",
+          "title": "",
+          "collapsedByDefault": false,
+          "autoShowOnIntent": true,
+          "icon": "",
+          "render": { "prefabKey": "", "collection": "", "recordId": "" },
+          "accepts": [],
+          "whenHidden": { "absorbedBy": [] }
+        }
+      }
+    ]
+  }
+]

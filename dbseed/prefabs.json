@@ -1,0 +1,65 @@
+[
+  {
+    "_id": { "$oid": "860000000000000000060001" },
+    "key": "voiceStudio",
+    "title": "Voice Studio",
+    "description": "Playground prefab to test TTS and STT against the voice app's upstream engines.",
+    "icon": "lucide:mic",
+    "type": "voiceStudio",
+    "displayType": "multi",
+    "reserved": true,
+    "frontend": {
+      "loader": "nativeFederation",
+      "remoteName": "voice",
+      "remoteEntry": "/mf/voice/remoteEntry.json",
+      "exposedModule": "./VoiceStudioPrefab",
+      "exportName": "VoiceStudioComponent"
+    },
+    "defaultTile": {
+      "cols": 3,
+      "rows": 2
+    }
+  },
+  {
+    "_id": { "$oid": "860000000000000000060002" },
+    "key": "voiceMicButton",
+    "title": "Voice Mic Button",
+    "description": "Push-to-talk microphone button. Records audio, sends it to /voice-api/api/stt, and emits the transcript to the host slot.",
+    "icon": "lucide:mic",
+    "type": "voiceMicButton",
+    "displayType": "single",
+    "reserved": true,
+    "frontend": {
+      "loader": "nativeFederation",
+      "remoteName": "voice",
+      "remoteEntry": "/mf/voice/remoteEntry.json",
+      "exposedModule": "./VoiceMicButtonPrefab",
+      "exportName": "VoiceMicButtonComponent"
+    },
+    "defaultTile": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "_id": { "$oid": "860000000000000000060003" },
+    "key": "voiceSpeaker",
+    "title": "Voice Speaker",
+    "description": "Renders text as audio via TTS with a play button. Useful as a thin drop-in inside agent chat panes.",
+    "icon": "lucide:volume-2",
+    "type": "voiceSpeaker",
+    "displayType": "single",
+    "reserved": true,
+    "frontend": {
+      "loader": "nativeFederation",
+      "remoteName": "voice",
+      "remoteEntry": "/mf/voice/remoteEntry.json",
+      "exposedModule": "./VoiceSpeakerPrefab",
+      "exportName": "VoiceSpeakerComponent"
+    },
+    "defaultTile": {
+      "cols": 1,
+      "rows": 1
+    }
+  }
+]

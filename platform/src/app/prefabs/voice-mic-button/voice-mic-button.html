@@ -1,0 +1,26 @@
+<button
+  class="micBtn"
+  [class.recording]="state() === 'recording'"
+  [class.busy]="state() === 'transcribing'"
+  [attr.aria-pressed]="state() === 'recording'"
+  [disabled]="state() === 'transcribing'"
+  (mousedown)="onPressStart($event)"
+  (mouseup)="onPressEnd($event)"
+  (mouseleave)="onPressEnd($event)"
+  (touchstart)="onPressStart($event)"
+  (touchend)="onPressEnd($event)"
+  (touchcancel)="onPressEnd($event)"
+>
+  @switch (state()) {
+    @case ('recording') { <span class="dot"></span> Recording... release to stop }
+    @case ('transcribing') { Transcribing... }
+    @default { {{ label() }} }
+  }
+</button>
+
+@if (lastError(); as err) {
+  <p class="err">{{ err }}</p>
+}
+@if (lastText(); as t) {
+  <p class="hint">Last: "{{ t }}"</p>
+}
