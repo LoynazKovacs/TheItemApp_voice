@@ -4,11 +4,12 @@
 # Brings up four services:
 #   voice         — Angular Native Federation remote (caddy serving /mf/voice/*)
 #   voice-api     — Fastify proxy (registers with core, /voice-api/api/*)
-#   kokoro-tts    — Kokoro-FastAPI OpenAI-compatible TTS upstream (CPU image)
-#   whisper-stt   — openai-whisper-asr-webservice multipart upstream
+#   kokoro-tts    — Kokoro-FastAPI OpenAI-compatible TTS upstream (GPU image)
+#   whisper-stt   — openai-whisper-asr-webservice multipart upstream (GPU image)
 #
-# To enable GPU acceleration for Kokoro, set KOKORO_IMAGE=ghcr.io/remsky/kokoro-fastapi-gpu
-# and uncomment the deploy stanza below.
+# To run on a CPU-only host, override KOKORO_IMAGE / WHISPER_IMAGE with the
+# `-cpu` / non-`-gpu` tags and remove the deploy stanzas (or compose will fail
+# to reserve the GPU device).
 
 services:
   voice:
@@ -49,37 +50,39 @@ services:
       - whisper-stt
 
   kokoro-tts:
-    image: "${KOKORO_IMAGE:-ghcr.io/remsky/kokoro-fastapi-cpu:latest}"
+    image: "${KOKORO_IMAGE:-ghcr.io/remsky/kokoro-fastapi-gpu:latest}"
     environment:
       - ONNX_NUM_THREADS=4
     ports:
       - "${KOKORO_PORT:-8880}:8880"
     restart: unless-stopped
-    # Uncomment + set KOKORO_IMAGE=ghcr.io/remsky/kokoro-fastapi-gpu:latest for GPU:
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: 1
-    #           capabilities: [gpu]
+    # Override KOKORO_IMAGE=ghcr.io/remsky/kokoro-fastapi-cpu:latest if running
+    # on a host without an NVIDIA GPU. The deploy stanza below reserves a GPU.
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
 
   whisper-stt:
-    image: "${WHISPER_IMAGE:-onerahmet/openai-whisper-asr-webservice:latest}"
+    image: "${WHISPER_IMAGE:-onerahmet/openai-whisper-asr-webservice:latest-gpu}"
     environment:
       - ASR_MODEL=${WHISPER_MODEL:-base}
       - ASR_ENGINE=${WHISPER_ENGINE:-openai_whisper}
     ports:
       - "${WHISPER_PORT:-9000}:9000"
     restart: unless-stopped
-    # Uncomment + set WHISPER_IMAGE=onerahmet/openai-whisper-asr-webservice:latest-gpu for GPU:
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: 1
-    #           capabilities: [gpu]
+    # Override WHISPER_IMAGE=onerahmet/openai-whisper-asr-webservice:latest if
+    # running on a host without an NVIDIA GPU.
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
 
 networks:
   default:
