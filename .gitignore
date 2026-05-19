@@ -4,3 +4,6 @@ out-tsc
 .env
 .env.local
 *.log
+
+# Diagnostic samples generated during TTS debug — not source artifacts.
+.diag-samples/

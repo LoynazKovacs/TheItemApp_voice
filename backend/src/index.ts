@@ -2,8 +2,7 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import multipart from '@fastify/multipart';
 import { getConfig } from './config.js';
-import { KokoroClient } from './kokoroClient.js';
-import { WhisperClient } from './whisperClient.js';
+import { OmniVoiceClient } from './omnivoiceClient.js';
 import { registerRoutes } from './routes.js';
 import { loadSeedRegistry } from './seedRegistry.js';
 import { CoreApiClient } from './coreApiClient.js';
@@ -31,12 +30,8 @@ async function main(): Promise<void> {
     limits: { fileSize: 50 * 1024 * 1024, files: 1 },
   });
 
-  const kokoroClient = new KokoroClient({
-    baseUrl: config.kokoroBaseUrl,
-    timeoutMs: config.upstreamTimeoutMs,
-  });
-  const whisperClient = new WhisperClient({
-    baseUrl: config.whisperBaseUrl,
+  const omnivoiceClient = new OmniVoiceClient({
+    baseUrl: config.omnivoiceBaseUrl,
     timeoutMs: config.upstreamTimeoutMs,
   });
 
@@ -50,8 +45,7 @@ async function main(): Promise<void> {
 
   registerRoutes(app, {
     config,
-    kokoroClient,
-    whisperClient,
+    omnivoiceClient,
     coreApi,
     seedRegistry,
   });

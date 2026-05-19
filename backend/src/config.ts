@@ -2,8 +2,7 @@ export interface AppConfig {
   port: number;
   coreApiUrl: string;
   coreApiKey: string | null;
-  kokoroBaseUrl: string;
-  whisperBaseUrl: string;
+  omnivoiceBaseUrl: string;
   upstreamTimeoutMs: number;
   defaultVoice: string;
   defaultModel: string;
@@ -31,11 +30,10 @@ export function getConfig(): AppConfig {
     port,
     coreApiUrl: (process.env.CORE_API_URL ?? '').trim() || 'http://backend:3001',
     coreApiKey: (process.env.VOICE_CORE_API_KEY ?? '').trim() || null,
-    kokoroBaseUrl: (process.env.KOKORO_BASE_URL ?? '').trim() || 'http://kokoro-tts:8880',
-    whisperBaseUrl: (process.env.WHISPER_BASE_URL ?? '').trim() || 'http://whisper-stt:9000',
+    omnivoiceBaseUrl: (process.env.OMNIVOICE_BASE_URL ?? '').trim() || 'http://omnivoice:3900',
     upstreamTimeoutMs: parseTimeoutMs(process.env.VOICE_UPSTREAM_TIMEOUT_MS, 120_000),
-    defaultVoice: (process.env.VOICE_DEFAULT_VOICE ?? '').trim() || 'af_sky',
-    defaultModel: (process.env.VOICE_DEFAULT_MODEL ?? '').trim() || 'kokoro',
+    defaultVoice: (process.env.VOICE_DEFAULT_VOICE ?? '').trim() || 'demo0001',
+    defaultModel: (process.env.VOICE_DEFAULT_MODEL ?? '').trim() || 'omnivoice',
     appKey,
     appRegistrationKey: (process.env.APP_REGISTRATION_KEY ?? '').trim() || null,
     registrationBaseUrl: (process.env.VOICE_REGISTRATION_BASE_URL ?? '').trim() || `http://voice-api:${port}`,

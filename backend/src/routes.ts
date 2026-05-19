@@ -1,14 +1,12 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { KokoroClient, type SpeechRequest } from './kokoroClient.js';
-import { WhisperClient } from './whisperClient.js';
+import { OmniVoiceClient, type SpeechRequest } from './omnivoiceClient.js';
 import { CoreApiClient } from './coreApiClient.js';
 import { SeedRegistry } from './seedRegistry.js';
 import type { AppConfig } from './config.js';
 
 interface RouteDeps {
   config: AppConfig;
-  kokoroClient: KokoroClient;
-  whisperClient: WhisperClient;
+  omnivoiceClient: OmniVoiceClient;
   coreApi: CoreApiClient;
   seedRegistry: SeedRegistry;
 }
@@ -36,22 +34,21 @@ export function registerRoutes(app: FastifyInstance, deps: RouteDeps): void {
   }));
 
   app.get('/api/upstreams/health', async (_request, reply) => {
-    const [tts, stt] = await Promise.all([
-      deps.kokoroClient.getHealth(),
-      deps.whisperClient.getHealth(),
-    ]);
+    const omni = await deps.omnivoiceClient.getHealth();
     return reply.send({
-      ok: tts.ok && stt.ok,
+      ok: omni.ok,
       upstreams: {
-        tts: { ok: tts.ok, status: tts.status, error: tts.error },
-        stt: { ok: stt.ok, status: stt.status, error: stt.error },
+        omnivoice: { ok: omni.ok, status: omni.status, error: omni.error },
+        // Back-compat aliases for any UI still keyed on tts/stt.
+        tts: { ok: omni.ok, status: omni.status, error: omni.error },
+        stt: { ok: omni.ok, status: omni.status, error: omni.error },
       },
     });
   });
 
   app.get('/api/voices', { preHandler: requireAuth }, async (request, reply) => {
     try {
-      const { voices } = await deps.kokoroClient.listVoices();
+      const { voices } = await deps.omnivoiceClient.listVoices();
       return reply.send({ ok: true, voices });
     } catch (error) {
       request.log.warn({ error }, 'Failed to list voices');
@@ -74,7 +71,7 @@ export function registerRoutes(app: FastifyInstance, deps: RouteDeps): void {
     const responseFormat = (body.response_format as SpeechRequest['response_format']) || 'mp3';
 
     try {
-      const upstream = await deps.kokoroClient.speech({
+      const upstream = await deps.omnivoiceClient.speech({
         input,
         voice: body.voice || deps.config.defaultVoice,
         model: body.model || deps.config.defaultModel,
@@ -84,7 +81,7 @@ export function registerRoutes(app: FastifyInstance, deps: RouteDeps): void {
       });
       if (!upstream.ok) {
         const errText = await upstream.text();
-        request.log.warn({ status: upstream.status, errText: errText.slice(0, 500) }, 'Kokoro speech failed');
+        request.log.warn({ status: upstream.status, errText: errText.slice(0, 500) }, 'OmniVoice speech failed');
         return reply.code(upstream.status).send({ error: 'TTS upstream failure', detail: errText.slice(0, 500) });
       }
       const contentType = upstream.headers.get('content-type') || mimeForFormat(responseFormat);
@@ -135,14 +132,22 @@ export function registerRoutes(app: FastifyInstance, deps: RouteDeps): void {
     }
 
     try {
-      const result = await deps.whisperClient.transcribe(fileBuffer, {
+      const result = await deps.omnivoiceClient.transcribe(fileBuffer, {
         filename: fileName,
         mimeType: fileMime,
         language,
         task,
-        output: 'json',
       });
-      return reply.send({ ok: true, text: result.text, raw: result.raw });
+      return reply.send({
+        ok: true,
+        text: result.text,
+        language: result.language,
+        segments: result.segments,
+        durationS: result.durationS,
+        transcriptionTimeS: result.transcriptionTimeS,
+        engine: result.engine,
+        raw: result.raw,
+      });
     } catch (error) {
       request.log.error({ error }, 'STT request failed');
       return reply.code(502).send({ ok: false, error: 'STT upstream failure' });

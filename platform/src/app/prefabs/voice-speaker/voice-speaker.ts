@@ -36,8 +36,24 @@ export function sanitizeForTts(input: string, refLabels?: Map<string, string> | 
     const label = lookup(m);
     return label ? label : '';
   });
-  // Inline code spans — drop whole span (often IDs / code / shell commands).
-  s = s.replace(/`[^`]+`/g, '');
+  // Inline code spans. Most of the time the content is a short identifier
+  // (variable name, file name, voice name like `af_bella`) that should be
+  // read aloud — just unwrap the backticks. Only drop the span entirely
+  // when the content looks like genuine code/shell noise that TTS will
+  // butcher: shell pipelines, function-call syntax, pure-hex blobs, etc.
+  s = s.replace(/`([^`]+)`/g, (_m, inner: string) => {
+    const t = inner.trim();
+    // Pure hex (likely commit SHA / ObjectId fragment) → drop. The bare-hex
+    // pass below will also catch these once unwrapped, but dropping here
+    // keeps surrounding punctuation cleaner.
+    if (/^[0-9a-f]{7,}$/i.test(t) && /\d/.test(t)) return '';
+    // Code-ish: shell syntax, function calls with args, multi-token commands
+    // with operators/redirects, semicolons. These read horribly.
+    if (/[(){};|&]/.test(t)) return '';
+    if (/\s/.test(t) && /[/=<>$@]/.test(t)) return '';
+    // Otherwise keep the inner text (identifier-like, file name, etc.).
+    return inner;
+  });
   // Bare hex SHA-like tokens (7-40 hex chars, must contain at least one digit
   // OR be at least 7 chars — avoid swallowing real English hex-only words).
   s = s.replace(/\b[0-9a-f]{7,40}\b/gi, m => /\d/.test(m) ? '' : m);

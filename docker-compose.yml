@@ -1,15 +1,18 @@
 # Voice app — joins core's theitemapp network.
 # Usage: docker compose up -d --build
 #
-# Brings up four services:
+# Brings up three services:
 #   voice         — Angular Native Federation remote (caddy serving /mf/voice/*)
 #   voice-api     — Fastify proxy (registers with core, /voice-api/api/*)
-#   kokoro-tts    — Kokoro-FastAPI OpenAI-compatible TTS upstream (GPU image)
-#   whisper-stt   — openai-whisper-asr-webservice multipart upstream (GPU image)
+#   omnivoice     — OmniVoice-Studio (unified TTS + STT + voice cloning) on :3900
 #
-# To run on a CPU-only host, override KOKORO_IMAGE / WHISPER_IMAGE with the
-# `-cpu` / non-`-gpu` tags and remove the deploy stanzas (or compose will fail
-# to reserve the GPU device).
+# OmniVoice exposes OpenAI-compatible /v1/audio/speech, /v1/audio/transcriptions,
+# /v1/audio/voices. The voice-api proxies these behind core's auth. The OmniVoice
+# UI on :3900 is treated as a playground — production traffic goes through the
+# voice-api.
+#
+# To run on a CPU-only host, override OMNIVOICE_IMAGE with the cpu tag (when
+# available) and remove the deploy stanza (or compose will fail to reserve GPU).
 
 services:
   voice:
@@ -31,10 +34,9 @@ services:
       APP_REGISTRATION_KEY: "${APP_REGISTRATION_KEY:-}"
       CORE_API_URL: "http://backend:3001"
       VOICE_CORE_API_KEY: "${VOICE_CORE_API_KEY:-}"
-      KOKORO_BASE_URL: "http://kokoro-tts:8880"
-      WHISPER_BASE_URL: "http://whisper-stt:9000"
-      VOICE_DEFAULT_VOICE: "${VOICE_DEFAULT_VOICE:-af_sky}"
-      VOICE_DEFAULT_MODEL: "${VOICE_DEFAULT_MODEL:-kokoro}"
+      OMNIVOICE_BASE_URL: "http://omnivoice:3900"
+      VOICE_DEFAULT_VOICE: "${VOICE_DEFAULT_VOICE:-demo0001}"
+      VOICE_DEFAULT_MODEL: "${VOICE_DEFAULT_MODEL:-omnivoice}"
       VOICE_UPSTREAM_TIMEOUT_MS: "${VOICE_UPSTREAM_TIMEOUT_MS:-120000}"
     ports:
       - "${VOICE_API_PORT:-3005}:3005"
@@ -46,18 +48,39 @@ services:
       start_period: 30s
     restart: unless-stopped
     depends_on:
-      - kokoro-tts
-      - whisper-stt
+      - omnivoice
 
-  kokoro-tts:
-    image: "${KOKORO_IMAGE:-ghcr.io/remsky/kokoro-fastapi-gpu:latest}"
+  omnivoice:
+    build:
+      context: ./omnivoice-init
+      dockerfile: Dockerfile
+      args:
+        OMNIVOICE_UPSTREAM: "${OMNIVOICE_IMAGE:-ghcr.io/debpalash/omnivoice-studio:0.2.7}"
+    image: voice-omnivoice:local
     environment:
-      - ONNX_NUM_THREADS=4
+      HF_HOME: "/app/omnivoice_data/huggingface"
+      HF_TOKEN: "${HF_TOKEN:-}"
+      OMNIVOICE_DATA_DIR: "/app/omnivoice_data"
+      OMNIVOICE_BIND_HOST: "0.0.0.0"
+      PYTHONPATH: "/app/backend"
+      PYTHONUNBUFFERED: "1"
+      # Disable PyTorch's torch.compile / Dynamo path. Otherwise the OmniVoice
+      # TTS engine triggers Triton's runtime kernel build, which fails with
+      # "Failed to find C compiler" inside the slim container.
+      TORCHDYNAMO_DISABLE: "1"
+    volumes:
+      - omnivoice-data:/app/omnivoice_data
     ports:
-      - "${KOKORO_PORT:-8880}:8880"
+      - "${OMNIVOICE_PORT:-3900}:3900"
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:3900/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 180s
     restart: unless-stopped
-    # Override KOKORO_IMAGE=ghcr.io/remsky/kokoro-fastapi-cpu:latest if running
-    # on a host without an NVIDIA GPU. The deploy stanza below reserves a GPU.
+    # Override OMNIVOICE_IMAGE with a CPU-tagged build (when available upstream)
+    # if running on a host without an NVIDIA GPU, and remove the deploy stanza.
     deploy:
       resources:
         reservations:
@@ -66,23 +89,46 @@ services:
               count: 1
               capabilities: [gpu]
 
-  whisper-stt:
-    image: "${WHISPER_IMAGE:-onerahmet/openai-whisper-asr-webservice:latest-gpu}"
-    environment:
-      - ASR_MODEL=${WHISPER_MODEL:-base}
-      - ASR_ENGINE=${WHISPER_ENGINE:-openai_whisper}
-    ports:
-      - "${WHISPER_PORT:-9000}:9000"
-    restart: unless-stopped
-    # Override WHISPER_IMAGE=onerahmet/openai-whisper-asr-webservice:latest if
-    # running on a host without an NVIDIA GPU.
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
+  # One-shot sidecar that fixes the broken upstream demo0001 voice profile.
+  # The OmniVoice image ships demo0001.wav as a 440 Hz sine-wave placeholder,
+  # which causes all generated speech to come out as noise. We bind-mount a
+  # real speech sample from ./omnivoice and reconcile voice_profiles.ref_text
+  # to match its transcript. Runs after omnivoice is healthy, then exits.
+  # Idempotent — safe to re-run on every `compose up`.
+  omnivoice-config:
+    image: voice-omnivoice:local
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        python3 - <<'PY'
+        import sqlite3, shutil, os, time
+        db = '/app/omnivoice_data/omnivoice.db'
+        for _ in range(120):
+            if os.path.exists(db):
+                break
+            time.sleep(1)
+        else:
+            raise SystemExit('omnivoice.db never appeared')
+        os.makedirs('/app/omnivoice_data/voices', exist_ok=True)
+        shutil.copyfile('/opt/voice-init/demo0001.wav', '/app/omnivoice_data/voices/demo0001.wav')
+        con = sqlite3.connect(db)
+        con.execute(
+            "UPDATE voice_profiles SET ref_text=? WHERE id='demo0001'",
+            ("When I was seventeen years old, I could throw a baseball ninety miles an hour.",),
+        )
+        con.commit()
+        con.close()
+        print('demo0001 reference audio + ref_text reconciled')
+        PY
+    volumes:
+      - omnivoice-data:/app/omnivoice_data
+    depends_on:
+      omnivoice:
+        condition: service_healthy
+    restart: "no"
+
+volumes:
+  omnivoice-data:
 
 networks:
   default:
