@@ -1,6 +1,20 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
+import { Observable, Subscription, firstValueFrom } from 'rxjs';
+
+/**
+ * Minimal host-provided realtime API. Mirrors `PlatformRealtime` from the
+ * platform SDK without importing it directly (the SDK token is only resolvable
+ * from a prefab injector, but this service is `providedIn: 'root'`).
+ *
+ * Voice prefabs receive `PLATFORM_REALTIME` from the host and forward it here
+ * via `bindRealtime()` on construction so the cached `profileId` stays fresh
+ * even when `user_ui_configs` is mutated outside the voice-settings prefab
+ * (record-view edit, MCP, another browser tab, …).
+ */
+export interface VoicePrefsRealtime {
+  on(collection: string): Observable<unknown>;
+}
 
 /**
  * Per-user voice preferences resolved from `user_ui_configs.voice`.
@@ -31,6 +45,9 @@ export class UserVoicePrefsService {
   /** Memoised hot-load promise so concurrent consumers share one fetch. */
   private loadPromise: Promise<void> | null = null;
 
+  /** Realtime subscription on `user_ui_configs` — set up once, lifetime-of-service. */
+  private rtSub: Subscription | null = null;
+
   /** Trigger initial load. Safe to call multiple times — idempotent. */
   ensureLoaded(): Promise<void> {
     if (this.loaded()) return Promise.resolve();
@@ -47,6 +64,27 @@ export class UserVoicePrefsService {
     this.loaded.set(false);
     this.loadPromise = null;
     await this.ensureLoaded();
+  }
+
+  /**
+   * Wire up host-provided realtime so any change to `user_ui_configs` (the
+   * user's settings doc — the row-security filter on this collection ensures
+   * we only receive our own upserts) triggers a refresh of the cached
+   * `profileId`. Idempotent: only the first non-null caller binds; subsequent
+   * calls no-op.
+   *
+   * Without this hook, an external edit (record-view, MCP, another tab) would
+   * update the DB but leave the in-memory `profileId` signal stale until the
+   * page reloads — causing TTS to keep speaking the previously-selected voice.
+   */
+  bindRealtime(rt: VoicePrefsRealtime | null | undefined): void {
+    if (this.rtSub || !rt) return;
+    this.rtSub = rt.on('user_ui_configs').subscribe(() => {
+      // The realtime channel for this collection is row-security scoped to the
+      // current user, so any event we receive is by definition about our own
+      // config. Trigger a fresh `load()` to re-resolve the x-ref hop.
+      void this.refresh();
+    });
   }
 
   private async load(): Promise<void> {

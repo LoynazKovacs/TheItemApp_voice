@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+import { PLATFORM_REALTIME } from '@loynazkovacs/theitemapp-platform-sdk';
 import { VoiceApiService } from '../../services/voice-api.service';
 import { UserVoicePrefsService } from '../../services/user-voice-prefs.service';
 
@@ -43,6 +44,19 @@ export class VoiceSettingsComponent implements OnInit {
   private readonly api = inject(VoiceApiService);
   private readonly prefs = inject(UserVoicePrefsService);
   private readonly cdr = inject(ChangeDetectorRef);
+  /**
+   * Host-provided realtime, forwarded into the shared prefs service so its
+   * cached `profileId` stays in sync with backend edits to `user_ui_configs`.
+   * See VoicePrefsRealtime / UserVoicePrefsService.bindRealtime.
+   */
+  private readonly platformRealtime = inject(PLATFORM_REALTIME, { optional: true });
+
+  constructor() {
+    // Idempotent — first prefab to mount sets up the subscription, later
+    // mounts are no-ops. Settings is included alongside speaker so the
+    // wiring works even when only settings is open at app startup.
+    this.prefs.bindRealtime(this.platformRealtime ?? null);
+  }
 
   readonly windowId = input<string>('');
 

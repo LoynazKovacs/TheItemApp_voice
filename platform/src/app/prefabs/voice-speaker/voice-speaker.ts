@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, computed, effect, inject, input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { PLATFORM_REALTIME } from '@loynazkovacs/theitemapp-platform-sdk';
 import { VoiceApiService } from '../../services/voice-api.service';
 import { RefResolverService } from '../../services/ref-resolver.service';
 import { UserVoicePrefsService } from '../../services/user-voice-prefs.service';
@@ -94,6 +95,13 @@ export class VoiceSpeakerComponent implements OnDestroy {
   private readonly refs = inject(RefResolverService);
   private readonly prefs = inject(UserVoicePrefsService);
   private readonly cdr = inject(ChangeDetectorRef);
+  /**
+   * Host-provided realtime. Optional — present when mounted inside the
+   * theitemapp shell, null in standalone microapp mode. Forwarded to the
+   * shared prefs service so cached `profileId` stays in sync with backend
+   * edits to `user_ui_configs` from anywhere.
+   */
+  private readonly platformRealtime = inject(PLATFORM_REALTIME, { optional: true });
 
   readonly windowId = input<string>('');
   readonly text = input<string>('');
@@ -188,6 +196,12 @@ export class VoiceSpeakerComponent implements OnDestroy {
     // may race with the load and fall back to the backend default voice;
     // subsequent requests see the resolved profileId.
     void this.prefs.ensureLoaded();
+    // Wire the host's realtime channel into the prefs service (idempotent;
+    // first prefab to mount sets it up, subsequent mounts no-op). This is
+    // how the speaker stays in sync when `user_ui_configs.voice` is edited
+    // from outside the voice-settings prefab — record-view, MCP, another
+    // browser tab, etc.
+    this.prefs.bindRealtime(this.platformRealtime ?? null);
 
     // Streaming extractor: watches text() (and streaming() flag) while armed
     // and queues newly-arrived complete sentences for playback.
