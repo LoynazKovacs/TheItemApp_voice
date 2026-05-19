@@ -148,6 +148,21 @@ export class OmniVoiceClient {
     return true;
   }
 
+  /**
+   * Delete a voice profile from OmniVoice. Used by the reconciler to clean up
+   * stale profiles when a `voice_voices` row's reference audio or transcript
+   * changes. 404s are swallowed (already gone is success).
+   */
+  async deleteProfile(profileId: string): Promise<void> {
+    if (!profileId) return;
+    const response = await this.fetchWithTimeout(`/profiles/${encodeURIComponent(profileId)}`, { method: 'DELETE' });
+    if (response.status === 404) return;
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`[OmniVoiceClient] deleteProfile ${response.status}: ${errText.slice(0, 200)}`);
+    }
+  }
+
   /** Returns the upstream Response so the caller can stream/forward audio bytes. */
   async speech(request: SpeechRequest): Promise<Response> {
     const form = new FormData();

@@ -83,6 +83,24 @@
             "hideInTable": true
           }
         },
+        "provisionedFromAudioFileId": {
+          "type": "string",
+          "title": "Provisioned from audio",
+          "description": "Backend-managed drift marker: the `audioFileId` that was used to clone the current `profileId`. When it differs from the current `audioFileId`, the reconciler deletes the stale OmniVoice profile and re-provisions.",
+          "x-ui": {
+            "readonly": true,
+            "hideInTable": true
+          }
+        },
+        "provisionedFromRefText": {
+          "type": "string",
+          "title": "Provisioned from refText",
+          "description": "Backend-managed drift marker: the `refText` that was used to clone the current `profileId`. Mismatch triggers re-provisioning.",
+          "x-ui": {
+            "readonly": true,
+            "hideInTable": true
+          }
+        },
         "audioFileId": {
           "type": "string",
           "title": "Reference audio",

@@ -24,6 +24,10 @@ export interface VoiceVoiceRow {
   key?: string;
   displayName?: string;
   profileId?: string;
+  /** Drift marker: `audioFileId` that produced the current `profileId`. */
+  provisionedFromAudioFileId?: string;
+  /** Drift marker: `refText` that produced the current `profileId`. */
+  provisionedFromRefText?: string;
   audioFileId?: string | { _id?: string } | null;
   refText?: string;
   language?: string;

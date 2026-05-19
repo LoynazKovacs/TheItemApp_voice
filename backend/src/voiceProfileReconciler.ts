@@ -127,6 +127,12 @@ export class VoiceProfileReconciler {
     const audioFileId = extractFileId(row.audioFileId);
     const refText = typeof row.refText === 'string' ? row.refText.trim() : '';
     const currentProfileId = typeof row.profileId === 'string' ? row.profileId.trim() : '';
+    const provisionedFromAudio = typeof row.provisionedFromAudioFileId === 'string'
+      ? row.provisionedFromAudioFileId.trim()
+      : '';
+    const provisionedFromText = typeof row.provisionedFromRefText === 'string'
+      ? row.provisionedFromRefText
+      : '';
 
     // Nothing to do if the row doesn't declare an audio source — e.g. legacy
     // demo0001 still provisioned out-of-band by the omnivoice-config sidecar.
@@ -139,11 +145,18 @@ export class VoiceProfileReconciler {
       return 'skipped';
     }
 
-    // If we already have a profileId AND it exists on OmniVoice, no work.
-    if (currentProfileId) {
+    // Decide whether we need to (re)provision:
+    //   1. no profileId yet               → provision
+    //   2. profileId is missing on OmniVoice (volume reset, etc.) → re-provision
+    //   3. audioFileId or refText drifted from what produced the current
+    //      profileId → delete old profile, re-provision
+    let reason: 'missing' | 'stale-upstream' | 'drift-audio' | 'drift-text' | null = null;
+    if (!currentProfileId) {
+      reason = 'missing';
+    } else {
       try {
         const exists = await this.opts.omnivoice.hasProfile(currentProfileId);
-        if (exists) return 'skipped';
+        if (!exists) reason = 'stale-upstream';
       } catch (err) {
         // Transient OmniVoice error — leave the row alone, try next sweep.
         this.opts.logger.debug(
@@ -152,16 +165,33 @@ export class VoiceProfileReconciler {
         );
         return 'skipped';
       }
+      if (!reason) {
+        if (provisionedFromAudio !== audioFileId) reason = 'drift-audio';
+        else if (provisionedFromText !== refText) reason = 'drift-text';
+      }
+    }
+
+    if (!reason) return 'skipped';
+
+    if (reason !== 'missing') {
       this.opts.logger.info(
-        { voiceVoiceId: row._id, staleProfileId: currentProfileId },
-        '[voiceReconciler] profileId stale (not on omnivoice), re-provisioning',
+        {
+          voiceVoiceId: row._id,
+          key: row.key,
+          staleProfileId: currentProfileId,
+          reason,
+          audioFileId,
+          provisionedFromAudio: provisionedFromAudio || null,
+        },
+        '[voiceReconciler] re-provisioning voice profile',
       );
     }
 
     // Download reference audio from core.
     const blob = await this.opts.coreApi.downloadFile(audioFileId);
 
-    // Create a profile in OmniVoice.
+    // Create the new profile in OmniVoice BEFORE deleting the old one, so a
+    // failure here doesn't leave the row with no usable profile.
     const profileName = (typeof row.displayName === 'string' && row.displayName.trim())
       || (typeof row.key === 'string' && row.key.trim())
       || `voice-${row._id.slice(-6)}`;
@@ -176,11 +206,33 @@ export class VoiceProfileReconciler {
       language,
     });
 
-    // Write back the new profileId.
-    await this.opts.coreApi.patchVoiceVoice(row._id, { profileId: created.id });
+    // Write back the new profileId + drift markers atomically.
+    await this.opts.coreApi.patchVoiceVoice(row._id, {
+      profileId: created.id,
+      provisionedFromAudioFileId: audioFileId,
+      provisionedFromRefText: refText,
+    });
+
+    // Clean up the old OmniVoice profile if it was a real drift event (not
+    // just missing/stale). Best-effort — failure here is logged but doesn't
+    // fail the sweep, since the row is already pointing at the new profile.
+    if ((reason === 'drift-audio' || reason === 'drift-text') && currentProfileId && currentProfileId !== created.id) {
+      try {
+        await this.opts.omnivoice.deleteProfile(currentProfileId);
+        this.opts.logger.info(
+          { voiceVoiceId: row._id, deletedProfileId: currentProfileId },
+          '[voiceReconciler] deleted stale OmniVoice profile',
+        );
+      } catch (err) {
+        this.opts.logger.warn(
+          { err, voiceVoiceId: row._id, staleProfileId: currentProfileId },
+          '[voiceReconciler] failed to delete stale OmniVoice profile (orphan left behind)',
+        );
+      }
+    }
 
     this.opts.logger.info(
-      { voiceVoiceId: row._id, key: row.key, profileId: created.id, audioFileId },
+      { voiceVoiceId: row._id, key: row.key, profileId: created.id, audioFileId, reason },
       '[voiceReconciler] provisioned voice profile',
     );
     return 'provisioned';
