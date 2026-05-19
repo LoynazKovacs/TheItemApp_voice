@@ -55,12 +55,32 @@ export class UserVoicePrefsService {
         this.http.get<unknown>('/api/dynamic/user_ui_configs', { params: { _l: 1 } }),
       );
       const doc = Array.isArray(rows) ? (rows[0] as Record<string, unknown> | undefined) : undefined;
-      const voice = (doc?.['voice'] as { selectedVoiceId?: string; speed?: number; autoMode?: boolean } | undefined) ?? undefined;
+      const voice = (doc?.['voice'] as
+        | { selectedVoiceId?: unknown; speed?: number; autoMode?: boolean }
+        | undefined) ?? undefined;
       if (typeof voice?.speed === 'number') this.speed.set(voice.speed);
       if (typeof voice?.autoMode === 'boolean') this.autoMode.set(voice.autoMode);
-      const vid = typeof voice?.selectedVoiceId === 'string' ? voice.selectedVoiceId : null;
+
+      // selectedVoiceId is an x-ref to voice_voices. The dynamic API populates
+      // x-refs by default, so it usually comes back as an object `{_id, ...}`
+      // (with whatever display fields the items doc declares). Accept both
+      // shapes; if the populated object already carries `profileId`, skip the
+      // second hop.
+      const raw = voice?.selectedVoiceId;
+      let vid: string | null = null;
+      let inlineProfileId: string | null = null;
+      if (typeof raw === 'string') {
+        vid = raw;
+      } else if (raw && typeof raw === 'object') {
+        const obj = raw as { _id?: unknown; profileId?: unknown };
+        if (typeof obj._id === 'string') vid = obj._id;
+        if (typeof obj.profileId === 'string' && obj.profileId) inlineProfileId = obj.profileId;
+      }
       this.selectedVoiceId.set(vid);
-      if (vid && /^[0-9a-f]{24}$/i.test(vid)) {
+
+      if (inlineProfileId) {
+        this.profileId.set(inlineProfileId);
+      } else if (vid && /^[0-9a-f]{24}$/i.test(vid)) {
         const voiceRow = await firstValueFrom(
           this.http.get<unknown>(`/api/dynamic/voice_voices/${vid}`),
         );
