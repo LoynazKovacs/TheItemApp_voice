@@ -6,8 +6,8 @@ import { RefResolverService } from '../../services/ref-resolver.service';
 /**
  * Strip markdown / agent-protocol noise that doesn't read well in TTS:
  *  - chip-ref tokens like `coding_agent_repos/6a0b2f5987da4709ea3c4b5e`
- *    (the UI renders these as clickable pills — Kokoro would otherwise
- *    spell them character-by-character)
+ *    (the UI renders these as clickable pills — the TTS engine would
+ *    otherwise spell them character-by-character)
  *  - inline code spans (commit SHAs, code snippets, identifiers)
  *  - bare hex tokens of 7+ chars (commit SHAs sitting outside backticks)
  *  - URLs (read as a stream of letters and slashes)
@@ -245,9 +245,9 @@ export class VoiceSpeakerComponent implements OnDestroy {
         await this.ensureRefsResolved(rawSlice);
         if (this.jobId !== jobAtQueue || !this.armed()) return;
         const chunkText = sanitizeForTts(rawSlice, this.refCache).trim();
-        // Skip chunks with no speakable letters (Kokoro chokes on "---" etc.,
-        // and post-sanitisation a chunk that was pure IDs/code may end up
-        // empty — silently drop those).
+        // Skip chunks with no speakable letters (TTS engines choke on "---"
+        // etc., and post-sanitisation a chunk that was pure IDs/code may end
+        // up empty — silently drop those).
         if (!chunkText || !/\p{L}|\p{N}/u.test(chunkText)) return;
         this.streamQueue.push(chunkText);
         void this.kickPump();
@@ -481,7 +481,7 @@ export class VoiceSpeakerComponent implements OnDestroy {
           pending.push(synth(chunks[nextNext]));
         }
         if (!res.ok || !res.blob) {
-          // Skip just this chunk and continue with the next — Kokoro
+          // Skip just this chunk and continue with the next — the TTS engine
           // occasionally fails on edge cases (e.g. very short or
           // unusual-character chunks) and aborting the whole queue is worse
           // UX than missing a sentence.
@@ -515,9 +515,9 @@ export class VoiceSpeakerComponent implements OnDestroy {
    */
   private chunkText(text: string): string[] {
     const MAX_CHARS = 280;
-    // Drop chunks that don't actually contain any speakable letters. Kokoro
-    // throws "list index out of range" on inputs like "---", "***", "•••",
-    // pure punctuation, or whitespace-only fragments.
+    // Drop chunks that don't actually contain any speakable letters. TTS
+    // engines tend to throw or emit garbage on inputs like "---", "***",
+    // "•••", pure punctuation, or whitespace-only fragments.
     const speakable = (s: string) => /\p{L}|\p{N}/u.test(s);
     const paragraphs = text
       .split(/\n\s*\n/)

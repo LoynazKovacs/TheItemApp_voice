@@ -56,8 +56,6 @@ interface OmniVoiceProfile {
  *   GET  /profiles               — voice profiles (the user-facing "voices")
  *   POST /generate               — TTS, multipart in, raw audio/wav out
  *   POST /transcribe             — STT, multipart in, JSON out
- *
- * Replaces the previous Kokoro + Whisper split.
  */
 export class OmniVoiceClient {
   constructor(private readonly options: OmniVoiceClientOptions) {}
