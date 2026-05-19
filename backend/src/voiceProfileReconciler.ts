@@ -150,7 +150,7 @@ export class VoiceProfileReconciler {
     //   2. profileId is missing on OmniVoice (volume reset, etc.) → re-provision
     //   3. audioFileId or refText drifted from what produced the current
     //      profileId → delete old profile, re-provision
-    let reason: 'missing' | 'stale-upstream' | 'drift-audio' | 'drift-text' | null = null;
+    let reason: 'missing' | 'stale-upstream' | 'drift-audio' | 'drift-text' | 'drift-no-seed' | null = null;
     if (!currentProfileId) {
       reason = 'missing';
     } else {
@@ -168,6 +168,7 @@ export class VoiceProfileReconciler {
       if (!reason) {
         if (provisionedFromAudio !== audioFileId) reason = 'drift-audio';
         else if (provisionedFromText !== refText) reason = 'drift-text';
+        else if (typeof row.provisionedFromSeed !== 'number') reason = 'drift-no-seed';
       }
     }
 
@@ -197,6 +198,14 @@ export class VoiceProfileReconciler {
       || `voice-${row._id.slice(-6)}`;
     const language = typeof row.language === 'string' && row.language.trim() ? row.language.trim() : 'Auto';
 
+    // Pin a deterministic seed derived from the audioFileId. Without this,
+    // OmniVoice's /generate picks a random seed every call → the same profile
+    // produces a noticeably different cloned voice on every TTS request
+    // (timbre/pitch wander). Deriving from audioFileId means the seed changes
+    // when the source audio changes (fresh interpretation) but stays stable
+    // for the lifetime of a given (audio, refText) pair.
+    const seed = deriveSeed(audioFileId, refText);
+
     const created = await this.opts.omnivoice.createProfile({
       name: profileName,
       refAudio: blob.bytes,
@@ -204,6 +213,7 @@ export class VoiceProfileReconciler {
       filename: blob.filename,
       mimeType: blob.mimeType,
       language,
+      seed,
     });
 
     // Write back the new profileId + drift markers atomically.
@@ -211,12 +221,17 @@ export class VoiceProfileReconciler {
       profileId: created.id,
       provisionedFromAudioFileId: audioFileId,
       provisionedFromRefText: refText,
+      provisionedFromSeed: seed,
     });
 
     // Clean up the old OmniVoice profile if it was a real drift event (not
     // just missing/stale). Best-effort — failure here is logged but doesn't
     // fail the sweep, since the row is already pointing at the new profile.
-    if ((reason === 'drift-audio' || reason === 'drift-text') && currentProfileId && currentProfileId !== created.id) {
+    if (
+      (reason === 'drift-audio' || reason === 'drift-text' || reason === 'drift-no-seed') &&
+      currentProfileId &&
+      currentProfileId !== created.id
+    ) {
       try {
         await this.opts.omnivoice.deleteProfile(currentProfileId);
         this.opts.logger.info(
@@ -237,6 +252,21 @@ export class VoiceProfileReconciler {
     );
     return 'provisioned';
   }
+}
+
+/**
+ * Derive a stable 31-bit non-negative seed from (audioFileId, refText) using
+ * djb2. ObjectIds are 24-hex but we hash the string form for resilience to
+ * any future id format changes. Capping at 2^31-1 keeps it inside the range
+ * OmniVoice's torch.manual_seed accepts as a Python int.
+ */
+function deriveSeed(audioFileId: string, refText: string): number {
+  const input = `${audioFileId}::${refText}`;
+  let h = 5381;
+  for (let i = 0; i < input.length; i += 1) {
+    h = ((h << 5) + h + input.charCodeAt(i)) | 0;
+  }
+  return Math.abs(h) % 0x7fffffff;
 }
 
 /**

@@ -101,6 +101,15 @@
             "hideInTable": true
           }
         },
+        "provisionedFromSeed": {
+          "type": "number",
+          "title": "Provisioned seed",
+          "description": "Backend-managed drift marker: deterministic seed pinned on the OmniVoice profile so repeat TTS calls produce a consistent voice. Missing value on an existing profile triggers re-provisioning.",
+          "x-ui": {
+            "readonly": true,
+            "hideInTable": true
+          }
+        },
         "audioFileId": {
           "type": "string",
           "title": "Reference audio",

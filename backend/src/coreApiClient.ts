@@ -28,6 +28,8 @@ export interface VoiceVoiceRow {
   provisionedFromAudioFileId?: string;
   /** Drift marker: `refText` that produced the current `profileId`. */
   provisionedFromRefText?: string;
+  /** Drift marker: deterministic seed pinned on the OmniVoice profile. */
+  provisionedFromSeed?: number;
   audioFileId?: string | { _id?: string } | null;
   refText?: string;
   language?: string;
