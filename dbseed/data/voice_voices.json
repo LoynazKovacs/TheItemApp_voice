@@ -1,0 +1,51 @@
+[
+  {
+    "_id": {
+      "$oid": "6a0c43307eed64b6e40abad5"
+    },
+    "key": "david",
+    "displayName": "David",
+    "engine": "omnivoice",
+    "profileId": "70200963",
+    "audioFileId": {
+      "$oid": "6a0c42977eed64b6e40ab7c1"
+    },
+    "refText": "The only conditions modern humans have ever known are changing, and changing fast!",
+    "language": "en",
+    "gender": "male",
+    "style": [],
+    "enabled": true,
+    "groupIds": [
+      {
+        "$oid": "7000000000000000001d0002"
+      }
+    ]
+  },
+  {
+    "_id": {
+      "$oid": "860000000000000000040001"
+    },
+    "key": "demo0001",
+    "displayName": "OmniVoice Demo (English)",
+    "description": "Default English voice baked into the OmniVoice container. Patched by the `omnivoice-config` sidecar to use a real human-speech reference instead of the broken upstream sine-wave.",
+    "engine": "omnivoice",
+    "profileId": "demo0001",
+    "refText": "When I was seventeen years old, I could throw a baseball ninety miles an hour.",
+    "language": "en",
+    "gender": "male",
+    "style": [
+      "narrator",
+      "neutral"
+    ],
+    "enabled": true,
+    "order": 10,
+    "groupIds": [
+      {
+        "$oid": "7000000000000000001d0001"
+      },
+      {
+        "$oid": "7000000000000000001d0002"
+      }
+    ]
+  }
+]

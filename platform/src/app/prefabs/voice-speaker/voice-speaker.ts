@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, effect, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, computed, effect, inject, input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { VoiceApiService } from '../../services/voice-api.service';
 import { RefResolverService } from '../../services/ref-resolver.service';
+import { UserVoicePrefsService } from '../../services/user-voice-prefs.service';
 
 /**
  * Strip markdown / agent-protocol noise that doesn't read well in TTS:
@@ -91,6 +92,7 @@ export function sanitizeForTts(input: string, refLabels?: Map<string, string> | 
 export class VoiceSpeakerComponent implements OnDestroy {
   private readonly api = inject(VoiceApiService);
   private readonly refs = inject(RefResolverService);
+  private readonly prefs = inject(UserVoicePrefsService);
   private readonly cdr = inject(ChangeDetectorRef);
 
   readonly windowId = input<string>('');
@@ -129,6 +131,21 @@ export class VoiceSpeakerComponent implements OnDestroy {
   /** True while auto-mode is engaged. Only meaningful when autoMode()===true. */
   armed = signal<boolean>(false);
 
+  /**
+   * Effective OmniVoice profile id used for TTS calls.
+   *
+   * Precedence:
+   *  1. Explicit `voice` input (caller / slot config wins).
+   *  2. User's pref from `user_ui_configs.voice.selectedVoiceId` (resolved
+   *     to `voice_voices.profileId` by UserVoicePrefsService).
+   *  3. `undefined` → backend falls back to `VOICE_DEFAULT_VOICE` env var.
+   */
+  private readonly effectiveVoice = computed<string | undefined>(() => {
+    const explicit = this.voice();
+    if (explicit) return explicit;
+    return this.prefs.profileId() ?? undefined;
+  });
+
   private currentAudio: HTMLAudioElement | null = null;
   private currentUrl: string | null = null;
   /** Tracks the last text we played in auto-mode to avoid replays on no-op changes. */
@@ -166,6 +183,12 @@ export class VoiceSpeakerComponent implements OnDestroy {
   private sliceChain: Promise<void> = Promise.resolve();
 
   constructor() {
+    // Trigger lazy load of user voice prefs. Safe to fire from constructor —
+    // shared singleton dedupes the actual HTTP call. The first TTS request
+    // may race with the load and fall back to the backend default voice;
+    // subsequent requests see the resolved profileId.
+    void this.prefs.ensureLoaded();
+
     // Streaming extractor: watches text() (and streaming() flag) while armed
     // and queues newly-arrived complete sentences for playback.
     effect(() => {
@@ -339,7 +362,7 @@ export class VoiceSpeakerComponent implements OnDestroy {
     this.cdr.markForCheck();
     const fireSynth = (chunk: string) => this.api.tts({
       text: chunk,
-      voice: this.voice() || undefined,
+      voice: this.effectiveVoice(),
       format: this.format(),
       speed: this.speed(),
     });
@@ -459,7 +482,7 @@ export class VoiceSpeakerComponent implements OnDestroy {
     const synth = (chunkText: string) =>
       this.api.tts({
         text: chunkText,
-        voice: this.voice() || undefined,
+        voice: this.effectiveVoice(),
         format: this.format(),
         speed: this.speed(),
       });

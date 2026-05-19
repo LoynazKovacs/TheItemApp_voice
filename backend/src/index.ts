@@ -6,6 +6,7 @@ import { OmniVoiceClient } from './omnivoiceClient.js';
 import { registerRoutes } from './routes.js';
 import { loadSeedRegistry } from './seedRegistry.js';
 import { CoreApiClient } from './coreApiClient.js';
+import { VoiceProfileReconciler } from './voiceProfileReconciler.js';
 
 async function main(): Promise<void> {
   const config = getConfig();
@@ -79,6 +80,12 @@ async function main(): Promise<void> {
     return reply.send(data);
   });
 
+  const reconciler = new VoiceProfileReconciler({
+    coreApi,
+    omnivoice: omnivoiceClient,
+    logger: app.log,
+  });
+
   const registerOnce = async (): Promise<boolean> => {
     if (!appManifest) return false;
     try {
@@ -101,6 +108,9 @@ async function main(): Promise<void> {
       if (data.apiKey) {
         coreApi.updateApiKey(data.apiKey);
         app.log.info('Core API client updated with auto-provisioned API key');
+        // Now that we can authenticate, kick the voice-profile reconciler so any
+        // freshly-installed voice_voices rows get their OmniVoice profiles ASAP.
+        reconciler.requestSweep();
       } else {
         app.log.warn({ data }, 'No apiKey returned from core registration!');
       }
@@ -123,6 +133,10 @@ async function main(): Promise<void> {
   await app.listen({ host: '0.0.0.0', port: config.port });
   app.log.info(`Voice API listening on http://localhost:${config.port}`);
 
+  // Start the reconciler immediately; it gates internally on `hasApiKey()` so
+  // it stays a no-op until registration succeeds.
+  reconciler.start();
+
   const heartbeatTimer = setInterval(() => {
     if (!appManifest) return;
     void registerOnce();
@@ -132,6 +146,7 @@ async function main(): Promise<void> {
   const shutdown = async (): Promise<void> => {
     if (shuttingDown) return;
     shuttingDown = true;
+    reconciler.stop();
     clearInterval(heartbeatTimer);
     try {
       await fetch(`${config.coreApiUrl}/api/apps/register/${config.appKey}`, {

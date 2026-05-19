@@ -1,1 +1,228 @@
-[]
+[
+  {
+    "_id": {
+      "$oid": "860000000000000000030001"
+    },
+    "key": "voice_voices",
+    "collection": "voice_voices",
+    "title": "Voices",
+    "titleSingular": "Voice",
+    "titlePlural": "Voices",
+    "description": "Catalog of TTS voice profiles available through the voice app's OmniVoice backend.",
+    "ai": {
+      "purpose": "Stores the voice profiles users can choose from for text-to-speech playback. Each row pairs a reference audio file + transcript that voice-api uses to provision an OmniVoice voice profile.",
+      "howItWorks": "Source of truth lives here. `voice-api` runs a reconciler that, for each row with `audioFileId` + `refText`, downloads the audio from core's `files` collection and POSTs it to OmniVoice `/profiles`, then writes the resulting `profile_id` back to `profileId` on this row. `VoiceSpeakerPrefab` looks up the user's preferred voice (stored on `user_ui_configs.voice.selectedVoiceId`) and forwards `profileId` to OmniVoice `/generate`. Because the reference audio is persisted in core (not in the OmniVoice container's volume), profiles survive stack rebuilds — the reconciler re-provisions them on startup.",
+      "manipulation": "To add a voice, upload a 3+ second reference WAV via the standard core file uploader (which creates a `files` record), then create a `voice_voices` row with `displayName`, `audioFileId` set to the file's `_id`, and `refText` set to the audio's transcript. Leave `profileId` empty — the reconciler fills it in. Use `enabled=false` to hide a voice from pickers without deleting it. `order` controls picker sort.",
+      "outcomes": [
+        {
+          "outcome": "Add a voice from a reference audio sample",
+          "how": "Upload the WAV via the standard files uploader to get a `files._id`. Create a `voice_voices` row with `audioFileId` set to that id, `refText` set to what's spoken in the audio, plus `displayName`, `language`, `gender`. The reconciler clones the profile in OmniVoice and back-fills `profileId` within ~1s."
+        },
+        {
+          "outcome": "Hide a voice from users",
+          "how": "Set `enabled=false`. The catalog row stays for traceability and the reconciler stops touching it."
+        }
+      ],
+      "warnings": [
+        "Don't manually edit `profileId` — it's backend-managed by the reconciler. Editing it points the row at a stale OmniVoice profile that may not exist after a rebuild.",
+        "`audioFileId` MUST point at a real `files` record the voice-api functional user can read (admin/user group, not private). Private files won't be visible to the reconciler.",
+        "Do not delete a voice that users have selected as their preference — flip `enabled=false` instead, so the prefab can fall back gracefully."
+      ]
+    },
+    "icon": "lucide:mic-2",
+    "appId": {
+      "$oid": "860000000000000000000001"
+    },
+    "schema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "displayName"
+      ],
+      "properties": {
+        "key": {
+          "type": "string",
+          "title": "Key",
+          "description": "Stable unique slug for this voice (typically matches `profileId`).",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "displayName": {
+          "type": "string",
+          "title": "Display name",
+          "description": "User-facing label shown in voice pickers.",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "description": {
+          "type": "string",
+          "title": "Description",
+          "description": "Optional character/use-case notes.",
+          "x-ui": {
+            "format": "markdown",
+            "hideInTable": true
+          }
+        },
+        "engine": {
+          "type": "string",
+          "title": "Engine",
+          "description": "TTS engine providing this voice. Reserved for future engines.",
+          "enum": [
+            "omnivoice"
+          ],
+          "default": "omnivoice"
+        },
+        "profileId": {
+          "type": "string",
+          "title": "Profile ID",
+          "description": "Engine-specific profile identifier. Backend-managed: the voice-api reconciler fills this in after cloning a profile in OmniVoice from `audioFileId` + `refText`. Leave empty when creating a new voice; do not hand-edit.",
+          "maxLength": 200,
+          "x-ui": {
+            "readonly": true,
+            "hideInTable": true
+          }
+        },
+        "audioFileId": {
+          "type": "string",
+          "title": "Reference audio",
+          "description": "Reference WAV used to clone this voice in OmniVoice. 3+ seconds of clean human speech recommended. Upload via the standard files uploader, then pick the resulting file here.",
+          "x-ref": "files",
+          "x-ui": {
+            "control": "fileUpload",
+            "accept": "audio/*",
+            "hideInTable": true
+          }
+        },
+        "refText": {
+          "type": "string",
+          "title": "Reference text",
+          "description": "Verbatim transcript of `audioFileId`. Used by OmniVoice to clone the voice — needs to match the audio exactly for best quality.",
+          "x-ui": {
+            "format": "textarea",
+            "hideInTable": true
+          }
+        },
+        "language": {
+          "type": "string",
+          "title": "Language",
+          "description": "ISO 639-1 language code (e.g. `en`, `es`, `de`)."
+        },
+        "gender": {
+          "type": "string",
+          "title": "Gender",
+          "description": "Voice gender.",
+          "enum": [
+            "female",
+            "male",
+            "neutral"
+          ]
+        },
+        "style": {
+          "type": "array",
+          "title": "Style tags",
+          "description": "Free-form descriptive tags (e.g. `warm`, `news`, `narrator`).",
+          "items": {
+            "type": "string"
+          }
+        },
+        "enabled": {
+          "type": "boolean",
+          "title": "Enabled",
+          "description": "Hide from pickers without deleting when false.",
+          "default": true
+        },
+        "order": {
+          "type": "integer",
+          "title": "Order",
+          "description": "Sort order in voice pickers.",
+          "minimum": 0
+        },
+        "groupIds": {
+          "type": "array",
+          "title": "Groups",
+          "description": "Row-security scope for this voice.",
+          "items": {
+            "type": "string",
+            "x-ref": "groups"
+          }
+        }
+      }
+    },
+    "ui": {
+      "display": {
+        "templates": [
+          "{{displayName}}",
+          "{{key}}"
+        ]
+      },
+      "prefabs": {
+        "list": "list",
+        "edit": "edit",
+        "show": "show"
+      },
+      "list": {
+        "columns": [
+          "_id",
+          "key",
+          "displayName",
+          "language",
+          "gender",
+          "profileId",
+          "enabled",
+          "order"
+        ],
+        "headerActions": [
+          {
+            "kind": "new"
+          },
+          {
+            "kind": "refresh"
+          },
+          {
+            "kind": "deleteFiltered"
+          }
+        ]
+      }
+    },
+    "api": {
+      "crud": true,
+      "realtime": true
+    },
+    "auth": {
+      "read": {
+        "groupIds": [
+          {
+            "$oid": "7000000000000000001d0001"
+          },
+          {
+            "$oid": "7000000000000000001d0002"
+          }
+        ]
+      },
+      "create": {
+        "groupIds": [
+          {
+            "$oid": "7000000000000000001d0001"
+          }
+        ]
+      },
+      "edit": {
+        "groupIds": [
+          {
+            "$oid": "7000000000000000001d0001"
+          }
+        ]
+      },
+      "delete": {
+        "groupIds": [
+          {
+            "$oid": "7000000000000000001d0001"
+          }
+        ]
+      }
+    },
+    "tier": 3,
+    "kind": "lookup"
+  }
+]

@@ -7,6 +7,7 @@ module.exports = withNativeFederation({
     './VoiceStudioPrefab': './src/app/prefabs/voice-studio/exposed.ts',
     './VoiceMicButtonPrefab': './src/app/prefabs/voice-mic-button/exposed.ts',
     './VoiceSpeakerPrefab': './src/app/prefabs/voice-speaker/exposed.ts',
+    './VoiceSettingsPrefab': './src/app/prefabs/voice-settings/exposed.ts',
   },
 
   shared: {

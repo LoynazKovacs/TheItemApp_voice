@@ -89,6 +89,34 @@
         "prefabConfig",
         "sort"
       ]
+    },
+    {
+      "collection": "voice_voices",
+      "file": "data/voice_voices.json",
+      "matchBy": "key",
+      "installMode": "shared",
+      "exportFields": [
+        "key",
+        "displayName",
+        "description",
+        "engine",
+        "profileId",
+        "audioFileId",
+        "refText",
+        "language",
+        "gender",
+        "style",
+        "enabled",
+        "order",
+        "groupIds"
+      ]
+    },
+    {
+      "collection": "users",
+      "file": "users.json",
+      "matchBy": "_id",
+      "installMode": "shared",
+      "exportFields": ["username", "usernameLower", "isSystem", "groupIds", "isFunctional", "appId"]
     }
   ],
   "routes": [

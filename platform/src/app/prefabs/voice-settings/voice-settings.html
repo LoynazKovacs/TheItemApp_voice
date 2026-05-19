@@ -1,0 +1,119 @@
+<div class="vs">
+  <header class="vsHeader">
+    <h2>Voice settings</h2>
+    <p class="hint">Pick the voice and playback options used when assistant messages are read aloud.</p>
+  </header>
+
+  <section class="vsPanel">
+    <h3>Playback</h3>
+    <div class="row">
+      <label class="field speedField">
+        <span>Speed</span>
+        <div class="speedRow">
+          <input
+            type="range"
+            min="0.5"
+            max="2.0"
+            step="0.05"
+            [ngModel]="speed()"
+            (ngModelChange)="setSpeed($event)"
+          />
+          <span class="speedReadout">{{ speed().toFixed(2) }}×</span>
+        </div>
+      </label>
+
+      <label class="field toggleField">
+        <input
+          type="checkbox"
+          [ngModel]="autoMode()"
+          (ngModelChange)="toggleAutoMode($event)"
+        />
+        <span>Auto-speak assistant messages by default</span>
+      </label>
+    </div>
+  </section>
+
+  <section class="vsPanel">
+    <header class="panelHeader">
+      <h3>Voice</h3>
+      @if (selectedRow(); as cur) {
+        <span class="currentChip" title="Currently selected">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          {{ cur.displayName }}
+        </span>
+      }
+    </header>
+
+    @if (loading()) {
+      <p class="muted">Loading voices…</p>
+    } @else if (loadError(); as err) {
+      <p class="err">{{ err }}</p>
+    } @else if (voices().length === 0) {
+      <p class="muted">No voices are available yet.</p>
+    } @else {
+      <ul class="voiceList">
+        @for (v of voices(); track v._id) {
+          <li
+            class="voiceRow"
+            [class.selected]="selectedId() === v._id"
+            (click)="selectVoice(v)"
+            [attr.aria-pressed]="selectedId() === v._id ? 'true' : 'false'"
+            role="button"
+            tabindex="0"
+          >
+            <div class="rowMain">
+              <div class="rowText">
+                <div class="rowTitle">
+                  @if (selectedId() === v._id) {
+                    <svg class="tick" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                  }
+                  <span class="name">{{ v.displayName }}</span>
+                  @if (v.language) { <span class="badge">{{ v.language }}</span> }
+                  @if (v.gender) { <span class="badge ghost">{{ v.gender }}</span> }
+                </div>
+                @if (v.style?.length) {
+                  <div class="tagsRow">
+                    @for (t of v.style; track t) {
+                      <span class="tag">{{ t }}</span>
+                    }
+                  </div>
+                }
+                @if (v.description) {
+                  <p class="desc">{{ v.description }}</p>
+                }
+                @if (previewError() && previewError()!.id === v._id) {
+                  <p class="err small">{{ previewError()!.msg }}</p>
+                }
+              </div>
+              <button
+                type="button"
+                class="previewBtn"
+                (click)="$event.stopPropagation(); preview(v)"
+                [class.playing]="previewingId() === v._id"
+                [attr.aria-label]="previewingId() === v._id ? 'Stop preview' : 'Preview voice'"
+                [title]="previewingId() === v._id ? 'Stop preview' : 'Preview voice'"
+              >
+                @if (previewingId() === v._id) {
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <rect x="6" y="6" width="12" height="12" rx="1"/>
+                  </svg>
+                  <span>Stop</span>
+                } @else {
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor"/>
+                    <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                  </svg>
+                  <span>Preview</span>
+                }
+              </button>
+            </div>
+          </li>
+        }
+      </ul>
+    }
+  </section>
+</div>

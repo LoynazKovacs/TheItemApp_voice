@@ -1,27 +1,8 @@
 [
   {
-    "_id": { "$oid": "860000000000000000060001" },
-    "key": "voiceStudio",
-    "title": "Voice Studio",
-    "description": "Playground prefab to test TTS and STT against the voice app's upstream engines.",
-    "icon": "lucide:mic",
-    "type": "voiceStudio",
-    "displayType": "multi",
-    "reserved": true,
-    "frontend": {
-      "loader": "nativeFederation",
-      "remoteName": "voice",
-      "remoteEntry": "/mf/voice/remoteEntry.json",
-      "exposedModule": "./VoiceStudioPrefab",
-      "exportName": "VoiceStudioComponent"
+    "_id": {
+      "$oid": "860000000000000000060002"
     },
-    "defaultTile": {
-      "cols": 3,
-      "rows": 2
-    }
-  },
-  {
-    "_id": { "$oid": "860000000000000000060002" },
     "key": "voiceMicButton",
     "title": "Voice Mic Button",
     "description": "Push-to-talk microphone button. Records audio, sends it to /voice-api/api/stt, and emits the transcript to the host slot.",
@@ -42,7 +23,32 @@
     }
   },
   {
-    "_id": { "$oid": "860000000000000000060003" },
+    "_id": {
+      "$oid": "860000000000000000060004"
+    },
+    "key": "voiceSettings",
+    "title": "Voice Settings",
+    "description": "Browse the voice catalog, preview each voice, and pick a preferred voice for TTS playback. Persists to user_ui_configs.voice.",
+    "icon": "lucide:settings-2",
+    "type": "voiceSettings",
+    "displayType": "single",
+    "reserved": true,
+    "frontend": {
+      "loader": "nativeFederation",
+      "remoteName": "voice",
+      "remoteEntry": "/mf/voice/remoteEntry.json",
+      "exposedModule": "./VoiceSettingsPrefab",
+      "exportName": "VoiceSettingsComponent"
+    },
+    "defaultTile": {
+      "cols": 2,
+      "rows": 3
+    }
+  },
+  {
+    "_id": {
+      "$oid": "860000000000000000060003"
+    },
     "key": "voiceSpeaker",
     "title": "Voice Speaker",
     "description": "Renders text as audio via TTS with a play button. Useful as a thin drop-in inside agent chat panes.",
@@ -60,6 +66,29 @@
     "defaultTile": {
       "cols": 1,
       "rows": 1
+    }
+  },
+  {
+    "_id": {
+      "$oid": "860000000000000000060001"
+    },
+    "key": "voiceStudio",
+    "title": "Voice Studio",
+    "description": "Playground prefab to test TTS and STT against the voice app's upstream engines.",
+    "icon": "lucide:mic",
+    "type": "voiceStudio",
+    "displayType": "multi",
+    "reserved": true,
+    "frontend": {
+      "loader": "nativeFederation",
+      "remoteName": "voice",
+      "remoteEntry": "/mf/voice/remoteEntry.json",
+      "exposedModule": "./VoiceStudioPrefab",
+      "exportName": "VoiceStudioComponent"
+    },
+    "defaultTile": {
+      "cols": 3,
+      "rows": 2
     }
   }
 ]

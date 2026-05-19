@@ -1,0 +1,244 @@
+:host {
+  display: block;
+  height: 100%;
+  font: inherit;
+}
+
+.vs {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  overflow: auto;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.vsHeader h2 {
+  margin: 0 0 4px 0;
+}
+
+.vsHeader .hint {
+  margin: 0;
+  color: var(--text-muted, #6b7280);
+  font-size: 13px;
+}
+
+.vsPanel {
+  border: 1px solid var(--border, rgba(127, 127, 127, 0.25));
+  border-radius: 10px;
+  padding: 14px 16px;
+  background: var(--panel-bg, rgba(127, 127, 127, 0.04));
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.vsPanel h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted, #6b7280);
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.currentChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--accent-bg, rgba(59, 130, 246, 0.12));
+  color: var(--accent, #3b82f6);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+}
+
+.speedField {
+  min-width: 260px;
+}
+
+.speedRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.speedRow input[type="range"] {
+  flex: 1;
+}
+
+.speedReadout {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  min-width: 48px;
+  text-align: right;
+}
+
+.toggleField {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.voiceList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.voiceRow {
+  border: 1px solid var(--border, rgba(127, 127, 127, 0.2));
+  border-radius: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+  background: transparent;
+}
+
+.voiceRow:hover {
+  background: var(--hover-bg, rgba(127, 127, 127, 0.06));
+}
+
+.voiceRow.selected {
+  border-color: var(--accent, #3b82f6);
+  background: var(--accent-bg, rgba(59, 130, 246, 0.08));
+}
+
+.voiceRow:focus-visible {
+  outline: 2px solid var(--accent, #3b82f6);
+  outline-offset: 2px;
+}
+
+.rowMain {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.rowText {
+  flex: 1;
+  min-width: 0;
+}
+
+.rowTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.tick {
+  color: var(--accent, #3b82f6);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  background: var(--badge-bg, rgba(59, 130, 246, 0.12));
+  color: var(--accent, #3b82f6);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.badge.ghost {
+  background: var(--badge-ghost-bg, rgba(127, 127, 127, 0.12));
+  color: var(--text-muted, #6b7280);
+}
+
+.tagsRow {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.tag {
+  font-size: 11px;
+  color: var(--text-muted, #6b7280);
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--tag-bg, rgba(127, 127, 127, 0.08));
+}
+
+.desc {
+  margin: 6px 0 0 0;
+  font-size: 12px;
+  color: var(--text-muted, #6b7280);
+  line-height: 1.4;
+}
+
+.previewBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border, rgba(127, 127, 127, 0.3));
+  background: var(--btn-bg, rgba(127, 127, 127, 0.05));
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.previewBtn:hover {
+  background: var(--btn-hover-bg, rgba(127, 127, 127, 0.12));
+}
+
+.previewBtn.playing {
+  background: var(--accent, #3b82f6);
+  color: #fff;
+  border-color: var(--accent, #3b82f6);
+}
+
+.muted {
+  color: var(--text-muted, #6b7280);
+  font-size: 13px;
+  margin: 0;
+}
+
+.err {
+  color: var(--danger, #dc2626);
+  font-size: 13px;
+  margin: 4px 0 0 0;
+}
+
+.err.small {
+  font-size: 12px;
+}

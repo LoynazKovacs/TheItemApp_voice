@@ -92,6 +92,62 @@ export class OmniVoiceClient {
     return { voices };
   }
 
+  /**
+   * Create (clone) a voice profile in OmniVoice from a reference audio sample.
+   * Maps to `POST /profiles` (multipart) — see OmniVoice's `api/routers/profiles.py`.
+   * Returns the created profile id (an 8-char uuid prefix assigned by OmniVoice).
+   */
+  async createProfile(opts: {
+    name: string;
+    refAudio: Uint8Array;
+    refText: string;
+    filename?: string;
+    mimeType?: string;
+    language?: string;
+    instruct?: string;
+    seed?: number;
+    personality?: string;
+  }): Promise<{ id: string; name: string }> {
+    const form = new FormData();
+    form.append('name', opts.name);
+    form.append(
+      'ref_audio',
+      new Blob([new Uint8Array(opts.refAudio)], { type: opts.mimeType || 'audio/wav' }),
+      opts.filename || 'ref.wav',
+    );
+    form.append('ref_text', opts.refText ?? '');
+    if (opts.instruct) form.append('instruct', opts.instruct);
+    if (opts.language) form.append('language', opts.language);
+    if (typeof opts.seed === 'number') form.append('seed', String(opts.seed));
+    if (opts.personality) form.append('personality', opts.personality);
+
+    const response = await this.fetchWithTimeout('/profiles', { method: 'POST', body: form });
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`[OmniVoiceClient] createProfile ${response.status}: ${errText.slice(0, 500)}`);
+    }
+    const data = (await response.json()) as { id?: unknown; name?: unknown };
+    const id = typeof data.id === 'string' ? data.id : '';
+    if (!id) throw new Error(`[OmniVoiceClient] createProfile: missing id in response`);
+    const name = typeof data.name === 'string' ? data.name : opts.name;
+    return { id, name };
+  }
+
+  /**
+   * Quick presence check used by the reconciler — returns true if `/profiles/<id>`
+   * exists, false on 404, throws on other upstream errors.
+   */
+  async hasProfile(profileId: string): Promise<boolean> {
+    if (!profileId) return false;
+    const response = await this.fetchWithTimeout(`/profiles/${encodeURIComponent(profileId)}`, { method: 'GET' });
+    if (response.status === 404) return false;
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`[OmniVoiceClient] hasProfile ${response.status}: ${errText.slice(0, 200)}`);
+    }
+    return true;
+  }
+
   /** Returns the upstream Response so the caller can stream/forward audio bytes. */
   async speech(request: SpeechRequest): Promise<Response> {
     const form = new FormData();
