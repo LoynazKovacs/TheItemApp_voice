@@ -6,7 +6,7 @@
     "key": "david",
     "displayName": "David",
     "engine": "omnivoice",
-    "profileId": "70200963",
+    "profileId": "0653a802",
     "audioFileId": {
       "$oid": "6a0c42977eed64b6e40ab7c1"
     },
@@ -47,5 +47,23 @@
         "$oid": "7000000000000000001d0002"
       }
     ]
+  },
+  {
+    "_id": {
+      "$oid": "6a0c53c4813a09ba9a3e7e3d"
+    },
+    "key": "scarlet",
+    "displayName": "Scarlet",
+    "engine": "omnivoice",
+    "profileId": "3f41d7bb",
+    "audioFileId": {
+      "$oid": "6a0c536f813a09ba9a3e7b13"
+    },
+    "refText": "pretty good actually, its really nice to meet you!",
+    "language": "en",
+    "gender": "female",
+    "style": [],
+    "enabled": true,
+    "groupIds": []
   }
 ]

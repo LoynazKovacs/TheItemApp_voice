@@ -60,7 +60,8 @@
           "title": "Description",
           "description": "Optional character/use-case notes.",
           "x-ui": {
-            "format": "markdown"
+            "format": "markdown",
+            "hideInTable": true
           }
         },
         "engine": {
@@ -78,7 +79,8 @@
           "description": "Engine-specific profile identifier. Backend-managed: the voice-api reconciler fills this in after cloning a profile in OmniVoice from `audioFileId` + `refText`. Leave empty when creating a new voice; do not hand-edit.",
           "maxLength": 200,
           "x-ui": {
-            "readonly": true
+            "readonly": true,
+            "hideInTable": true
           }
         },
         "provisionedFromAudioFileId": {
@@ -86,7 +88,8 @@
           "title": "Provisioned from audio",
           "description": "Backend-managed drift marker: the `audioFileId` that was used to clone the current `profileId`. When it differs from the current `audioFileId`, the reconciler deletes the stale OmniVoice profile and re-provisions.",
           "x-ui": {
-            "readonly": true
+            "readonly": true,
+            "hideInTable": true
           }
         },
         "provisionedFromRefText": {
@@ -94,7 +97,8 @@
           "title": "Provisioned from refText",
           "description": "Backend-managed drift marker: the `refText` that was used to clone the current `profileId`. Mismatch triggers re-provisioning.",
           "x-ui": {
-            "readonly": true
+            "readonly": true,
+            "hideInTable": true
           }
         },
         "provisionedFromSeed": {
@@ -102,7 +106,8 @@
           "title": "Provisioned seed",
           "description": "Backend-managed drift marker: deterministic seed pinned on the OmniVoice profile so repeat TTS calls produce a consistent voice. Missing value on an existing profile triggers re-provisioning.",
           "x-ui": {
-            "readonly": true
+            "readonly": true,
+            "hideInTable": true
           }
         },
         "audioFileId": {
@@ -112,7 +117,8 @@
           "x-ref": "files",
           "x-ui": {
             "control": "fileUpload",
-            "accept": "audio/*"
+            "accept": "audio/*",
+            "hideInTable": true
           }
         },
         "refText": {
@@ -120,7 +126,8 @@
           "title": "Reference text",
           "description": "Verbatim transcript of `audioFileId`. Used by OmniVoice to clone the voice — needs to match the audio exactly for best quality.",
           "x-ui": {
-            "format": "textarea"
+            "format": "textarea",
+            "hideInTable": true
           }
         },
         "language": {
