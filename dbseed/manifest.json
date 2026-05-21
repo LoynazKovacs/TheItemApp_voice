@@ -1,7 +1,7 @@
 {
   "version": 2,
   "appKey": "voice",
-  "appVersion": "1.0.0",
+  "appVersion": "1.1.0",
   "engineRequires": ">=1.0.0",
   "requiresCore": true,
   "collections": [
@@ -88,6 +88,21 @@
         "prefabId",
         "prefabConfig",
         "sort"
+      ]
+    },
+    {
+      "collection": "voice_notes",
+      "file": "data/voice_notes.json",
+      "matchBy": "_id",
+      "installMode": "manualOrSystem",
+      "exportFields": [
+        "title",
+        "audioFileId",
+        "transcript",
+        "language",
+        "durationMs",
+        "mimeType",
+        "groupIds"
       ]
     },
     {

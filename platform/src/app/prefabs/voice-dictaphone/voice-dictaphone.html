@@ -1,0 +1,95 @@
+<div class="dictaphone">
+  <header class="head">
+    <div class="title">
+      <iconify-icon icon="lucide:cassette-tape" width="20" height="20" aria-hidden="true"></iconify-icon>
+      <span>Dictaphone</span>
+    </div>
+    <div class="state" [attr.data-state]="state()">
+      @switch (state()) {
+        @case ('idle') { Ready }
+        @case ('recording') { Recording… {{ formatDuration(durationMs()) }} }
+        @case ('recorded') { Listen & decide }
+        @case ('transcribing') { Transcribing… }
+        @case ('saving') { Saving… }
+        @case ('saved') { Saved ✓ }
+      }
+    </div>
+  </header>
+
+  <div class="primary">
+    @if (state() === 'idle' || state() === 'saved') {
+      <button type="button" class="bigBtn record" (click)="startRecording()">
+        <iconify-icon icon="lucide:mic" width="32" height="32" aria-hidden="true"></iconify-icon>
+        <span>Record</span>
+      </button>
+    } @else if (state() === 'recording') {
+      <button type="button" class="bigBtn stop" (click)="stopRecording()">
+        <span class="pulseDot" aria-hidden="true"></span>
+        <iconify-icon icon="lucide:square" width="32" height="32" aria-hidden="true"></iconify-icon>
+        <span>Stop</span>
+      </button>
+    }
+  </div>
+
+  @if ((state() === 'recorded' || state() === 'transcribing' || state() === 'saving') && audioUrl()) {
+    <section class="preview">
+      <audio controls [src]="audioUrl()!"></audio>
+      <div class="meta">Duration: {{ formatDuration(durationMs()) }}</div>
+
+      <label class="field">
+        <span class="label">Title</span>
+        <input type="text" [ngModel]="title()" (ngModelChange)="title.set($event)" placeholder="Voice note…" />
+      </label>
+
+      <label class="field">
+        <span class="label">
+          Transcript
+          @if (state() === 'transcribing') { <em class="muted">(transcribing…)</em> }
+          @if (detectedLanguage()) { <em class="muted">[{{ detectedLanguage() }}]</em> }
+        </span>
+        <textarea
+          rows="4"
+          [ngModel]="transcript()"
+          (ngModelChange)="transcript.set($event)"
+          placeholder="What was said (auto-filled)…"></textarea>
+      </label>
+
+      <div class="actions">
+        <button
+          type="button"
+          class="btn primary"
+          [disabled]="state() === 'saving'"
+          (click)="save()">
+          <iconify-icon icon="lucide:save" width="16" height="16" aria-hidden="true"></iconify-icon>
+          Save
+        </button>
+        <button type="button" class="btn" [disabled]="state() === 'saving'" (click)="retake()">
+          <iconify-icon icon="lucide:rotate-ccw" width="16" height="16" aria-hidden="true"></iconify-icon>
+          Re-record
+        </button>
+        <button type="button" class="btn danger" [disabled]="state() === 'saving'" (click)="discard()">
+          <iconify-icon icon="lucide:trash-2" width="16" height="16" aria-hidden="true"></iconify-icon>
+          Discard
+        </button>
+      </div>
+    </section>
+  }
+
+  @if (errorMessage()) {
+    <p class="err">{{ errorMessage() }}</p>
+  }
+
+  @if (recent().length > 0) {
+    <section class="recent">
+      <h3>Recently saved</h3>
+      <ul>
+        @for (n of recent(); track n.id) {
+          <li>
+            <iconify-icon icon="lucide:check-circle-2" width="14" height="14" aria-hidden="true"></iconify-icon>
+            <span>{{ n.title }}</span>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+</div>

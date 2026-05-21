@@ -8,7 +8,7 @@
     "description": "Push-to-talk microphone button. Records audio, sends it to /voice-api/api/stt, and emits the transcript to the host slot.",
     "icon": "lucide:mic",
     "type": "voiceMicButton",
-    "displayType": "single",
+    "displayType": "component",
     "reserved": true,
     "frontend": {
       "loader": "nativeFederation",
@@ -31,7 +31,7 @@
     "description": "Browse the voice catalog, preview each voice, and pick a preferred voice for TTS playback. Persists to user_ui_configs.voice.",
     "icon": "lucide:settings-2",
     "type": "voiceSettings",
-    "displayType": "single",
+    "displayType": "standalone",
     "reserved": true,
     "frontend": {
       "loader": "nativeFederation",
@@ -54,7 +54,7 @@
     "description": "Renders text as audio via TTS with a play button. Useful as a thin drop-in inside agent chat panes.",
     "icon": "lucide:volume-2",
     "type": "voiceSpeaker",
-    "displayType": "single",
+    "displayType": "component",
     "reserved": true,
     "frontend": {
       "loader": "nativeFederation",
@@ -77,7 +77,7 @@
     "description": "Playground prefab to test TTS and STT against the voice app's upstream engines.",
     "icon": "lucide:mic",
     "type": "voiceStudio",
-    "displayType": "multi",
+    "displayType": "standalone",
     "reserved": true,
     "frontend": {
       "loader": "nativeFederation",
@@ -89,6 +89,29 @@
     "defaultTile": {
       "cols": 3,
       "rows": 2
+    }
+  },
+  {
+    "_id": {
+      "$oid": "860000000000000000060005"
+    },
+    "key": "voiceDictaphone",
+    "title": "Voice Dictaphone",
+    "description": "Record an audio note in the browser, listen back, auto-transcribe via STT, and save to voice_notes with the audio in core's files.",
+    "icon": "lucide:cassette-tape",
+    "type": "voiceDictaphone",
+    "displayType": "standalone",
+    "reserved": true,
+    "frontend": {
+      "loader": "nativeFederation",
+      "remoteName": "voice",
+      "remoteEntry": "/mf/voice/remoteEntry.json",
+      "exposedModule": "./VoiceDictaphonePrefab",
+      "exportName": "VoiceDictaphoneComponent"
+    },
+    "defaultTile": {
+      "cols": 2,
+      "rows": 3
     }
   }
 ]
