@@ -1,6 +1,48 @@
 [
   {
     "_id": {
+      "$oid": "6a0f884aabf9923632c8eeae"
+    },
+    "key": "bence",
+    "displayName": "Bence",
+    "engine": "omnivoice",
+    "profileId": "b9605150",
+    "audioFileId": {
+      "$oid": "6a0f86e3abf9923632c8d99b"
+    },
+    "refText": "Árvíztűrő tükörfúrógép",
+    "language": "hu",
+    "style": [],
+    "enabled": true,
+    "groupIds": [
+      {
+        "$oid": "7000000000000000001d0002"
+      }
+    ]
+  },
+  {
+    "_id": {
+      "$oid": "6a0f89b4abf9923632c9004e"
+    },
+    "key": "dani-hu",
+    "displayName": "Dani (HU)",
+    "engine": "omnivoice",
+    "profileId": "29f793f7",
+    "audioFileId": {
+      "$oid": "6a0f8979abf9923632c8fe60"
+    },
+    "refText": "Most ezzel csináljunk egy új hangot, amivel bemutatjuk Dániel csodálatos hangját. Ez egy kicsit hosszabb lesz, mint a többi, de megéri, mert sokkal több információ lesz minden egyes szóban.",
+    "language": "hu",
+    "style": [],
+    "enabled": true,
+    "groupIds": [
+      {
+        "$oid": "7000000000000000001d0002"
+      }
+    ]
+  },
+  {
+    "_id": {
       "$oid": "6a0c43307eed64b6e40abad5"
     },
     "key": "david",
@@ -43,6 +85,27 @@
       {
         "$oid": "7000000000000000001d0001"
       },
+      {
+        "$oid": "7000000000000000001d0002"
+      }
+    ]
+  },
+  {
+    "_id": {
+      "$oid": "6a0f5db5abf9923632c74b49"
+    },
+    "key": "party-voice",
+    "displayName": "Dan",
+    "engine": "omnivoice",
+    "profileId": "f55621e8",
+    "audioFileId": {
+      "$oid": "6a0f8223abf9923632c89fb6"
+    },
+    "refText": "Never mind, I will never go there! It gives me chills.",
+    "language": "en",
+    "style": [],
+    "enabled": true,
+    "groupIds": [
       {
         "$oid": "7000000000000000001d0002"
       }

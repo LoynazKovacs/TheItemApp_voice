@@ -19,6 +19,11 @@ RUN npm install --omit=dev
 FROM node:20-bookworm-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
+# ffmpeg is needed by /api/import-media to transcode any uploaded audio/video
+# file into the canonical 24 kHz mono PCM WAV the STT pipeline expects.
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends ffmpeg \
+  && rm -rf /var/lib/apt/lists/*
 COPY --from=build /app/dist ./dist
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=build /app/package.json ./

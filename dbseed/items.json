@@ -1,6 +1,171 @@
 [
   {
     "_id": {
+      "$oid": "860000000000000000030002"
+    },
+    "key": "voice_notes",
+    "collection": "voice_notes",
+    "title": "Voice Notes",
+    "titleSingular": "Voice Note",
+    "titlePlural": "Voice Notes",
+    "description": "User-recorded audio notes paired with their auto-generated transcript.",
+    "ai": {
+      "purpose": "Stores dictaphone recordings: the audio blob (as a `files` row) plus the transcribed text so the note is searchable and readable without playback.",
+      "howItWorks": "The `VoiceDictaphonePrefab` records audio in the browser, calls `/voice-api/api/stt` to transcribe, then on save uploads the audio to core's `/api/files/uploadDirect` and creates a `voice_notes` row linking `audioFileId` to the resulting file and storing the (optionally edited) `transcript`.",
+      "manipulation": "Create rows through the dictaphone prefab. Editing `transcript` later is fine — it's just the cached text. Don't edit `audioFileId` unless you mean to swap the underlying recording.",
+      "outcomes": [
+        {
+          "outcome": "Capture a voice memo",
+          "how": "Open the Dictaphone, press Record, stop, optionally edit the transcript, click Save. A `voice_notes` row is created with `audioFileId` pointing at the new `files` record."
+        }
+      ],
+      "warnings": [
+        "Deleting a `voice_notes` row does NOT delete the underlying `files` record. Delete the file separately if needed."
+      ]
+    },
+    "icon": "lucide:cassette-tape",
+    "appId": {
+      "$oid": "860000000000000000000001"
+    },
+    "schema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "audioFileId"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "title": "Title",
+          "description": "Short label for this note. Defaults to capture timestamp.",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "audioFileId": {
+          "type": "string",
+          "title": "Audio",
+          "description": "The recorded audio stored in core's `files` collection.",
+          "x-ref": "files",
+          "x-ui": {
+            "control": "fileUpload",
+            "accept": "audio/*"
+          }
+        },
+        "transcript": {
+          "type": "string",
+          "title": "Transcript",
+          "description": "What was said in the recording. Auto-generated via STT, user-editable before save.",
+          "x-ui": {
+            "format": "textarea"
+          }
+        },
+        "language": {
+          "type": "string",
+          "title": "Language",
+          "description": "ISO 639-1 language code detected during transcription (e.g. `en`)."
+        },
+        "durationMs": {
+          "type": "number",
+          "title": "Duration (ms)",
+          "description": "Length of the recording in milliseconds.",
+          "minimum": 0,
+          "x-ui": {
+            "readonly": true
+          }
+        },
+        "mimeType": {
+          "type": "string",
+          "title": "MIME type",
+          "description": "MIME type of the audio blob (mirrors `files.mimeType` for fast list rendering).",
+          "x-ui": {
+            "readonly": true
+          }
+        },
+        "groupIds": {
+          "type": "array",
+          "title": "Groups",
+          "description": "Row-security scope. Empty = owner-only.",
+          "items": {
+            "type": "string",
+            "x-ref": "groups"
+          }
+        }
+      }
+    },
+    "ui": {
+      "display": {
+        "templates": [
+          "{{title}}"
+        ]
+      },
+      "prefabs": {
+        "list": "list",
+        "edit": "edit",
+        "show": "show"
+      },
+      "list": {
+        "headerActions": [
+          {
+            "kind": "refresh"
+          },
+          {
+            "kind": "deleteFiltered"
+          }
+        ]
+      }
+    },
+    "api": {
+      "crud": true,
+      "realtime": true
+    },
+    "auth": {
+      "read": {
+        "groupIds": [
+          {
+            "$oid": "7000000000000000001d0001"
+          },
+          {
+            "$oid": "7000000000000000001d0002"
+          }
+        ]
+      },
+      "create": {
+        "groupIds": [
+          {
+            "$oid": "7000000000000000001d0001"
+          },
+          {
+            "$oid": "7000000000000000001d0002"
+          }
+        ]
+      },
+      "edit": {
+        "groupIds": [
+          {
+            "$oid": "7000000000000000001d0001"
+          },
+          {
+            "$oid": "7000000000000000001d0002"
+          }
+        ]
+      },
+      "delete": {
+        "groupIds": [
+          {
+            "$oid": "7000000000000000001d0001"
+          },
+          {
+            "$oid": "7000000000000000001d0002"
+          }
+        ]
+      }
+    },
+    "tier": 3,
+    "kind": "data"
+  },
+  {
+    "_id": {
       "$oid": "860000000000000000030001"
     },
     "key": "voice_voices",
@@ -234,170 +399,5 @@
     },
     "tier": 3,
     "kind": "lookup"
-  },
-  {
-    "_id": {
-      "$oid": "860000000000000000030002"
-    },
-    "key": "voice_notes",
-    "collection": "voice_notes",
-    "title": "Voice Notes",
-    "titleSingular": "Voice Note",
-    "titlePlural": "Voice Notes",
-    "description": "User-recorded audio notes paired with their auto-generated transcript.",
-    "ai": {
-      "purpose": "Stores dictaphone recordings: the audio blob (as a `files` row) plus the transcribed text so the note is searchable and readable without playback.",
-      "howItWorks": "The `VoiceDictaphonePrefab` records audio in the browser, calls `/voice-api/api/stt` to transcribe, then on save uploads the audio to core's `/api/files/uploadDirect` and creates a `voice_notes` row linking `audioFileId` to the resulting file and storing the (optionally edited) `transcript`.",
-      "manipulation": "Create rows through the dictaphone prefab. Editing `transcript` later is fine — it's just the cached text. Don't edit `audioFileId` unless you mean to swap the underlying recording.",
-      "outcomes": [
-        {
-          "outcome": "Capture a voice memo",
-          "how": "Open the Dictaphone, press Record, stop, optionally edit the transcript, click Save. A `voice_notes` row is created with `audioFileId` pointing at the new `files` record."
-        }
-      ],
-      "warnings": [
-        "Deleting a `voice_notes` row does NOT delete the underlying `files` record. Delete the file separately if needed."
-      ]
-    },
-    "icon": "lucide:cassette-tape",
-    "appId": {
-      "$oid": "860000000000000000000001"
-    },
-    "schema": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "title",
-        "audioFileId"
-      ],
-      "properties": {
-        "title": {
-          "type": "string",
-          "title": "Title",
-          "description": "Short label for this note. Defaults to capture timestamp.",
-          "minLength": 1,
-          "maxLength": 200
-        },
-        "audioFileId": {
-          "type": "string",
-          "title": "Audio",
-          "description": "The recorded audio stored in core's `files` collection.",
-          "x-ref": "files",
-          "x-ui": {
-            "control": "fileUpload",
-            "accept": "audio/*"
-          }
-        },
-        "transcript": {
-          "type": "string",
-          "title": "Transcript",
-          "description": "What was said in the recording. Auto-generated via STT, user-editable before save.",
-          "x-ui": {
-            "format": "textarea"
-          }
-        },
-        "language": {
-          "type": "string",
-          "title": "Language",
-          "description": "ISO 639-1 language code detected during transcription (e.g. `en`)."
-        },
-        "durationMs": {
-          "type": "number",
-          "title": "Duration (ms)",
-          "description": "Length of the recording in milliseconds.",
-          "minimum": 0,
-          "x-ui": {
-            "readonly": true
-          }
-        },
-        "mimeType": {
-          "type": "string",
-          "title": "MIME type",
-          "description": "MIME type of the audio blob (mirrors `files.mimeType` for fast list rendering).",
-          "x-ui": {
-            "readonly": true
-          }
-        },
-        "groupIds": {
-          "type": "array",
-          "title": "Groups",
-          "description": "Row-security scope. Empty = owner-only.",
-          "items": {
-            "type": "string",
-            "x-ref": "groups"
-          }
-        }
-      }
-    },
-    "ui": {
-      "display": {
-        "templates": [
-          "{{title}}"
-        ]
-      },
-      "prefabs": {
-        "list": "list",
-        "edit": "edit",
-        "show": "show"
-      },
-      "list": {
-        "headerActions": [
-          {
-            "kind": "refresh"
-          },
-          {
-            "kind": "deleteFiltered"
-          }
-        ]
-      }
-    },
-    "api": {
-      "crud": true,
-      "realtime": true
-    },
-    "auth": {
-      "read": {
-        "groupIds": [
-          {
-            "$oid": "7000000000000000001d0001"
-          },
-          {
-            "$oid": "7000000000000000001d0002"
-          }
-        ]
-      },
-      "create": {
-        "groupIds": [
-          {
-            "$oid": "7000000000000000001d0001"
-          },
-          {
-            "$oid": "7000000000000000001d0002"
-          }
-        ]
-      },
-      "edit": {
-        "groupIds": [
-          {
-            "$oid": "7000000000000000001d0001"
-          },
-          {
-            "$oid": "7000000000000000001d0002"
-          }
-        ]
-      },
-      "delete": {
-        "groupIds": [
-          {
-            "$oid": "7000000000000000001d0001"
-          },
-          {
-            "$oid": "7000000000000000001d0002"
-          }
-        ]
-      }
-    },
-    "tier": 3,
-    "kind": "data"
   }
 ]

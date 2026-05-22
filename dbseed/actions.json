@@ -1,0 +1,29 @@
+[
+  {
+    "_id": {
+      "$oid": "6a0f8c03abf9923632c932f5"
+    },
+    "key": "voice.voice_notes.rowButton.createVoice",
+    "modelId": {
+      "$oid": "860000000000000000030002"
+    },
+    "type": "rowButton",
+    "kind": "httpPostFromRow",
+    "label": "Create voice",
+    "tooltip": "Clone this recording as a voice profile",
+    "icon": "lucide:user-round-plus",
+    "order": 1,
+    "config": {
+      "urlTemplate": "/voice-api/api/voice-from-note/{{_id}}",
+      "bodyTemplate": "{}"
+    },
+    "groupIds": [
+      {
+        "$oid": "7000000000000000001d0001"
+      },
+      {
+        "$oid": "7000000000000000001d0002"
+      }
+    ]
+  }
+]

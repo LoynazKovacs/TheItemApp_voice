@@ -1,6 +1,29 @@
 [
   {
     "_id": {
+      "$oid": "860000000000000000060005"
+    },
+    "key": "voiceDictaphone",
+    "title": "Voice Dictaphone",
+    "description": "Record an audio note in the browser, listen back, auto-transcribe via STT, and save to voice_notes with the audio in core's files.",
+    "icon": "lucide:cassette-tape",
+    "type": "voiceDictaphone",
+    "displayType": "standalone",
+    "reserved": true,
+    "frontend": {
+      "loader": "nativeFederation",
+      "remoteName": "voice",
+      "remoteEntry": "/mf/voice/remoteEntry.json",
+      "exposedModule": "./VoiceDictaphonePrefab",
+      "exportName": "VoiceDictaphoneComponent"
+    },
+    "defaultTile": {
+      "cols": 2,
+      "rows": 3
+    }
+  },
+  {
+    "_id": {
       "$oid": "860000000000000000060002"
     },
     "key": "voiceMicButton",
@@ -89,29 +112,6 @@
     "defaultTile": {
       "cols": 3,
       "rows": 2
-    }
-  },
-  {
-    "_id": {
-      "$oid": "860000000000000000060005"
-    },
-    "key": "voiceDictaphone",
-    "title": "Voice Dictaphone",
-    "description": "Record an audio note in the browser, listen back, auto-transcribe via STT, and save to voice_notes with the audio in core's files.",
-    "icon": "lucide:cassette-tape",
-    "type": "voiceDictaphone",
-    "displayType": "standalone",
-    "reserved": true,
-    "frontend": {
-      "loader": "nativeFederation",
-      "remoteName": "voice",
-      "remoteEntry": "/mf/voice/remoteEntry.json",
-      "exposedModule": "./VoiceDictaphonePrefab",
-      "exportName": "VoiceDictaphoneComponent"
-    },
-    "defaultTile": {
-      "cols": 2,
-      "rows": 3
     }
   }
 ]

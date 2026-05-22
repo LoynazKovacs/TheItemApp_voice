@@ -132,6 +132,32 @@
       "matchBy": "_id",
       "installMode": "shared",
       "exportFields": ["username", "usernameLower", "isSystem", "groupIds", "isFunctional", "appId"]
+    },
+    {
+      "collection": "actions",
+      "file": "actions.json",
+      "matchBy": "key",
+      "installMode": "shared",
+      "exportFields": [
+        "key",
+        "modelId",
+        "type",
+        "kind",
+        "label",
+        "tooltip",
+        "description",
+        "icon",
+        "iconKey",
+        "order",
+        "color",
+        "config",
+        "inputSchema",
+        "visibleWhen",
+        "disabledWhen",
+        "ui",
+        "groupIds"
+      ],
+      "filter": { "appId": "<thisAppId>" }
     }
   ],
   "routes": [

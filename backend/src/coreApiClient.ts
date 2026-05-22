@@ -41,6 +41,17 @@ export interface FileMeta {
   _id: string;
   originalName?: string;
   mimeType?: string;
+  groupIds?: string[];
+}
+
+export interface VoiceNoteRow {
+  _id: string;
+  title?: string;
+  audioFileId?: string | { _id?: string } | null;
+  transcript?: string;
+  language?: string;
+  groupIds?: string[];
+  [k: string]: unknown;
 }
 
 export interface FileBlob {
@@ -116,6 +127,134 @@ export class CoreApiClient {
       const body = await res.text();
       throw new CoreApiError('PUT', url, res.status, body.slice(0, 500));
     }
+  }
+
+  /** Fetch a single voice_notes row by id. */
+  async getVoiceNote(id: string): Promise<VoiceNoteRow | null> {
+    const url = `${this.baseUrl}/api/dynamic/voice_notes/${encodeURIComponent(id)}`;
+    const res = await fetch(url, { method: 'GET', headers: this.headers });
+    if (res.status === 404) return null;
+    if (!res.ok) {
+      const body = await res.text();
+      throw new CoreApiError('GET', url, res.status, body.slice(0, 500));
+    }
+    return (await res.json()) as VoiceNoteRow | null;
+  }
+
+  /** Fetch a single files row by id (metadata only — no bytes). */
+  async getFileMeta(id: string): Promise<FileMeta | null> {
+    const url = `${this.baseUrl}/api/dynamic/files/${encodeURIComponent(id)}`;
+    const res = await fetch(url, { method: 'GET', headers: this.headers });
+    if (res.status === 404) return null;
+    if (!res.ok) {
+      const body = await res.text();
+      throw new CoreApiError('GET', url, res.status, body.slice(0, 500));
+    }
+    return (await res.json()) as FileMeta | null;
+  }
+
+  /**
+   * Patch a files row's groupIds via `$set`. Used by `/api/voice-from-note` to
+   * widen scope so the voice-backend functional user can read the reference WAV
+   * (files RBAC = ownerId match OR groupIds intersection).
+   *
+   * Pass the user's `authorization`/`cookie` from the original request: the
+   * file was uploaded via `uploadDirect` so its row-security has groupIds=[]
+   * and only the owner can edit it. The voice-backend's functional user is
+   * NOT the owner — but the calling user is, so we proxy the patch under
+   * their credentials.
+   */
+  async patchFileGroupIds(
+    fileId: string,
+    groupIds: string[],
+    authorization?: string,
+    cookie?: string,
+  ): Promise<void> {
+    const url = `${this.baseUrl}/api/dynamic/files/${encodeURIComponent(fileId)}`;
+    const res = await fetch(url, {
+      method: 'PUT',
+      headers: this.requestHeaders(authorization, cookie),
+      body: JSON.stringify({ $set: { groupIds } }),
+    });
+    if (!res.ok) {
+      const body = await res.text();
+      throw new CoreApiError('PUT', url, res.status, body.slice(0, 500));
+    }
+  }
+
+  /**
+   * Upload a binary blob to core's `/api/files/uploadDirect`. MUST be called
+   * with the originating user's `authorization`/`cookie` so the file is owned
+   * by them (matches the dictaphone's own save flow). The voice-backend's
+   * functional user is NOT a fallback here — without forwarded auth the file
+   * would belong to the functional user and the originating user might lose
+   * read access depending on RBAC.
+   */
+  async uploadFile(
+    blob: FileBlob,
+    options: { title?: string; visibility?: 'private' | 'public' } = {},
+    authorization?: string,
+    cookie?: string,
+  ): Promise<{ _id: string }> {
+    const url = `${this.baseUrl}/api/files/uploadDirect`;
+    const form = new FormData();
+    form.append(
+      'file',
+      new Blob([blob.bytes as unknown as BlobPart], { type: blob.mimeType }),
+      blob.filename,
+    );
+    if (options.title) form.append('title', options.title);
+    form.append('kind', 'file');
+    form.append('visibility', options.visibility ?? 'private');
+    // Don't send Content-Type — FormData wants to set its own multipart
+    // boundary. Build headers manually with everything BUT Content-Type.
+    const headers: Record<string, string> = {};
+    if (this.headers['x-api-key']) headers['x-api-key'] = this.headers['x-api-key'];
+    if (this.headers['x-theitemapp-skip-webhooks']) {
+      headers['x-theitemapp-skip-webhooks'] = this.headers['x-theitemapp-skip-webhooks'];
+    }
+    if (authorization?.trim()) headers.Authorization = authorization.trim();
+    if (cookie?.trim()) headers.Cookie = cookie.trim();
+    const res = await fetch(url, { method: 'POST', headers, body: form as unknown as BodyInit });
+    if (!res.ok) {
+      const body = await res.text();
+      throw new CoreApiError('POST', url, res.status, body.slice(0, 500));
+    }
+    return (await res.json()) as { _id: string };
+  }
+
+  /** Create a voice_notes row via the dynamic API. */
+  async createVoiceNote(
+    doc: Record<string, unknown>,
+    authorization?: string,
+    cookie?: string,
+  ): Promise<{ _id: string }> {
+    const url = `${this.baseUrl}/api/dynamic/voice_notes`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: this.requestHeaders(authorization, cookie),
+      body: JSON.stringify(doc),
+    });
+    if (!res.ok) {
+      const body = await res.text();
+      throw new CoreApiError('POST', url, res.status, body.slice(0, 500));
+    }
+    return (await res.json()) as { _id: string };
+  }
+
+  /** Create a voice_voices row. Returns the inserted document. */
+  async createVoiceVoice(doc: Record<string, unknown>): Promise<VoiceVoiceRow> {
+    const url = `${this.baseUrl}/api/dynamic/voice_voices`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: this.headers,
+      body: JSON.stringify(doc),
+    });
+    if (!res.ok) {
+      const body = await res.text();
+      throw new CoreApiError('POST', url, res.status, body.slice(0, 500));
+    }
+    return (await res.json()) as VoiceVoiceRow;
   }
 
   /**

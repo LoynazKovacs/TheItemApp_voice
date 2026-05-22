@@ -23,12 +23,15 @@ async function main(): Promise<void> {
         },
       },
     },
-    bodyLimit: 50 * 1024 * 1024,
+    // 500 MB — enough headroom for short videos dropped into the dictaphone's
+    // import zone (the transcoder strips video out, but the upload itself
+    // still pushes the original bytes).
+    bodyLimit: 500 * 1024 * 1024,
   });
 
   await app.register(cors, { origin: true, credentials: true });
   await app.register(multipart, {
-    limits: { fileSize: 50 * 1024 * 1024, files: 1 },
+    limits: { fileSize: 500 * 1024 * 1024, files: 1 },
   });
 
   const omnivoiceClient = new OmniVoiceClient({
@@ -44,11 +47,18 @@ async function main(): Promise<void> {
   const seedRegistry = loadSeedRegistry();
   const appManifest = seedRegistry.manifest;
 
+  const reconciler = new VoiceProfileReconciler({
+    coreApi,
+    omnivoice: omnivoiceClient,
+    logger: app.log,
+  });
+
   registerRoutes(app, {
     config,
     omnivoiceClient,
     coreApi,
     seedRegistry,
+    reconciler,
   });
 
   if (appManifest) {
@@ -78,12 +88,6 @@ async function main(): Promise<void> {
       return reply.code(404).send({ error: `No seed data for: ${collection}` });
     }
     return reply.send(data);
-  });
-
-  const reconciler = new VoiceProfileReconciler({
-    coreApi,
-    omnivoice: omnivoiceClient,
-    logger: app.log,
   });
 
   const registerOnce = async (): Promise<boolean> => {

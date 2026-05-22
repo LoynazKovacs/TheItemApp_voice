@@ -1,1 +1,99 @@
-[]
+[
+  {
+    "_id": {
+      "$oid": "6a0f5d1dabf9923632c742f6"
+    },
+    "title": "Voice note 2026-05-21 21:25",
+    "audioFileId": {
+      "$oid": "6a0f5d1dabf9923632c742f4"
+    },
+    "transcript": "Hi, I came here to party. Where is the party anyway?",
+    "language": "en",
+    "durationMs": 6201,
+    "mimeType": "audio/webm;codecs=opus",
+    "groupIds": []
+  },
+  {
+    "_id": {
+      "$oid": "6a0f624babf9923632c77e0c"
+    },
+    "title": "Voice note 2026-05-21 21:51",
+    "audioFileId": {
+      "$oid": "6a0f624babf9923632c77e0a"
+    },
+    "transcript": "",
+    "durationMs": 149663,
+    "mimeType": "audio/webm;codecs=opus",
+    "groupIds": []
+  },
+  {
+    "_id": {
+      "$oid": "6a0f62e6abf9923632c780ab"
+    },
+    "title": "Voice note 2026-05-21 21:53",
+    "audioFileId": {
+      "$oid": "6a0f62e6abf9923632c780a9"
+    },
+    "transcript": "Fél napig rá leszünk.  Jó, szóval egy privát hálózatot kellene létrehozni, amire kapunk egy meghívót e-mailben, és ezzel beaktiváljuk az eszközünket, amivel...  Így működik az erótér, amit mondtam.  Jelenleg az egyik legbiztonságosabb olyan privát network, amit tudjuk, a VPN-nél is biztonságosabb.  Pontosan azért, mert ugye ott azt az elvet követi, az a hold, nem tudom, azt mondtam nektek egyszer, hogy van egy szerver,  az egy ilyen olyan protokollon alapszik, mint amit a BitTorrent használ. Tehát egy P2P, egy ilyen decentralizált dolog.  És akkor ott vannak ilyen föld, vannak bolygók, és ezeket ilyen logikailag össze vannak kötve.  És akkor amikor te elmész az erótérhez ebből, az erótér az teljesen open source, te tudsz csinálni egy erótér saját szervert.  Vágj, akkor az erótírt kellene használnunk hozzá a privát hálózatra, amihez mi férünk hozzá, egy belső rendszer.  Plusz lenne egy publik rendszer, hogyha olyan alkalmazás van létrehozva,  mint például a Snake játék, amit el tud érni bárki, és megvan a cím, belépsz, a saját kis fiókoddal tudsz játszani vele.  És ez egy külön network. A public lenne egy private, amivel a private network-ön be is szállunk a hostingba egy géppel,  amin fut ugyanúgy az alkalmazás és a különböző példányai,  amik között egy DNS szerver tudnód balanszolni,  így a health check alapján.  Hogy amelyik elérhető a networkbe, arra a szerverre dobja be a kérdést.  De ezt még bonyolítani kell, mert a jó bonyolítás talán, hogy...  Igen, utána a dinamikus IP problémát át kell küszöbölni, de az DB-be tudod frissíteni, hogy mi az aktuális IP-d,  és akkor azt elküldeni, az szerintem egy megoldható folyamat, de igen, arra is figyelni kell.  Igen, de teljesen elrejteni a te belső is IP-t, amit nem lát a senki a...  Nekem ez iszonyatosan magas, úgyhogy majd ezt...  Akkor az előadónak klúd.",
+    "language": "hu",
+    "durationMs": 118264,
+    "mimeType": "audio/webm;codecs=opus",
+    "groupIds": []
+  },
+  {
+    "_id": {
+      "$oid": "6a0f6431abf9923632c7864c"
+    },
+    "title": "Voice note 2026-05-21 21:58",
+    "audioFileId": {
+      "$oid": "6a0f6431abf9923632c7864a"
+    },
+    "transcript": "Azáltal oldalra szeretnénk, hogy szeretnénk egy ilyen kicsit jót, de hogyha van ez, egy magasabb ára lesz, tehát a végén meg kell venned el a CloudFest-re egy csomagot, ami azt fog jól tenni, hogy kérlek tényleg, kérlek te ötven dollárt azért, hogy kapjál egy DNS-t, egy saját dombénevet, annak kapjál egy, azt kaptad kell három dolog, három dolog IP-t kell kaptad legalább.  Te tudod mennyit kaptad már most? Erre halottal adsz, hogy milyen ötven dollár, jelentem.  Nem tudom mennyit.  Egy jó hol kell alájönni.  Ez a lényeg, hogy egy ilyen változat, amit most mondtam, akkor mi az Istennek van az otthoni networkban, ha fizetsz mindenért, ha sajnálsz, hogy Proxmox-hoz, hogy lokálval fontos, csak az, mint egy cég, vagy adatvédelem miatt vagyunk.  Nem, nem, Laci, de nagyon drága a Cloud. Nagyon-nagyon drága a Cloud, és hogyha akarsz egy Cloud GPU-t, meg ilyenek, szuny a te állapotod.  Jó, és hogyha mondtam ezt, hogy ilyen Cloud GPU-t, azt nem tudom menni.  Nagyon drága.  De a Proxmox-mal nincs egy ilyen.  Nem, nincs. Nekem ott van a dockerben a GPU-m, ez attól függ, hogy milyen vasállapot használod.  Persze, de ez tök minden.  Még hogyha a Proxmox egy kis gépen is fut, egy kis mikrogépen, akkor is lehet egy szerviz otthon neked, amit már ő privátban el tud érni, ami kihasználja mondjuk a GPU-t.  Tökéletes lehet a weboldalat kiszolgálására, de ilyen állapot, mikor egy föld lesz sok pénzt a vasra.  Még ha sok pénzt a szára, hogy beveszed rá, hát azért itt azért van vas.  És ugye, most nem az a baj, én miért akarnék azot...  Ez eléggé, eléggé...  Én akarom autódégetni az áramot, érted? Azzal, hogy GPU-val gondolom.  Igen, van az áram, a hangszert akarom égetni.  Neked így van.  Igen, hogy mindenki mással tudna kontrollálni.  Ja, de CPU-val, érted?  Te lehet, hogy egy kis CPU-nód lennél, aki csak ott ül, semmi.  Én azt mondom neked, hogy ez a...  Megy egy ilyet anyámhoz, vagy bárkihez köszönhet.  Anyámhoz például érdemes lenne GPU-t berakni, mert ő is surplusban van.  Akinek van napeleme, az valamire érdemes elkölteni, mert akkor kapod vissza a pénzt az áramig.  Úgy is, amit én mondtam, csak az, hogy nagyon köszönöm, hogy megoldottatok csinálni.  Szerintem ez a három ProxFox-os, három nagy sima kiszolgálat, szerintem tíz ilyen is volt.  És hogy megcsinálni, hogy...  Úgy álljára egyszerűen pályalatokat feltennének, tehát egy...  Egy olyan network, azt rá izé pánydolni, ott szinkelje, az így házi...  Különböző skálázhatóságról beszélünk, viszont szeretnénk többet, többet, többet.  Most azt mondják, hogy ha megcsinálsz egy ilyen ProxFox is, mintegy 20 ezer forinttévet, de szemben 16 gramot,  az annyi kontenert el tudod venni, nagy menőforrás lenne runfasz fogyasztással,  hogy simán lehetne belőle egy normális felpontot kiszolgálni, finélekből.  De akkor ezt egy kóglatot inkább.  Mert...  A ProxFox az inkább szinte egy kóglat.  A neki értem rá ezt a kizetős részét, amit én azt állok.  Finéci...",
+    "language": "hu",
+    "durationMs": 179894,
+    "mimeType": "audio/webm;codecs=opus",
+    "groupIds": []
+  },
+  {
+    "_id": {
+      "$oid": "6a0f8223abf9923632c89fb8"
+    },
+    "title": "Voice note 2026-05-22 00:07",
+    "audioFileId": {
+      "$oid": "6a0f8223abf9923632c89fb6"
+    },
+    "transcript": "Never mind. I will never go there. It gives me chills.",
+    "language": "en",
+    "durationMs": 8334,
+    "mimeType": "audio/wav",
+    "groupIds": []
+  },
+  {
+    "_id": {
+      "$oid": "6a0f86e3abf9923632c8d99d"
+    },
+    "title": "bence note",
+    "audioFileId": {
+      "$oid": "6a0f86e3abf9923632c8d99b"
+    },
+    "transcript": "Árvíztűrő tükörfúrógép",
+    "language": "hu",
+    "durationMs": 3680,
+    "mimeType": "audio/wav",
+    "groupIds": []
+  },
+  {
+    "_id": {
+      "$oid": "6a0f8979abf9923632c8fe62"
+    },
+    "title": "Dani magyar hosszabb",
+    "audioFileId": {
+      "$oid": "6a0f8979abf9923632c8fe60"
+    },
+    "transcript": "Most ezzel csináljunk egy új hangot, amivel bemutatjuk Dániel csodálatos hangját.  Ez egy kicsit hosszabb lesz, mint a többi, de megéri, mert sokkal több információ lesz minden egyes szóban.",
+    "language": "hu",
+    "durationMs": 15412,
+    "mimeType": "audio/wav",
+    "groupIds": []
+  }
+]
