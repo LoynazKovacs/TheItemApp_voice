@@ -219,13 +219,14 @@ export class VoiceSpeakerComponent implements OnDestroy {
       // whitespace/trim, and the cursor should be capped (not rewound).
       // Otherwise it's a genuinely different message → soft reset.
       if (this.streamPrefix) {
-        const cmpLen = Math.min(this.streamPrefix.length, raw.length);
-        const sameStart = cmpLen > 0 && raw.startsWith(this.streamPrefix.substring(0, cmpLen));
+        const spoken = this.streamPrefix.substring(0, this.streamCursor);
+        const sameStart = spoken.length > 0 && raw.startsWith(spoken);
         if (!sameStart) {
           // Truly different message — drain pending chunks, but let any
           // currently-playing audio finish naturally so we don't cut the
           // previous message mid-word.
           this.softResetStream();
+          return;
         } else if (raw.length < this.streamCursor) {
           // Same message, just shorter (trim). Cap cursor so we don't
           // re-speak the already-consumed tail.
