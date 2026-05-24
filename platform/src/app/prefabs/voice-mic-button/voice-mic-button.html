@@ -7,11 +7,7 @@
   [attr.title]="state() === 'recording' ? 'Recording — release to stop' : (state() === 'transcribing' ? 'Transcribing…' : label())"
   [disabled]="state() === 'transcribing'"
   (mousedown)="onPressStart($event)"
-  (mouseup)="onPressEnd($event)"
-  (mouseleave)="onPressEnd($event)"
   (touchstart)="onPressStart($event)"
-  (touchend)="onPressEnd($event)"
-  (touchcancel)="onPressEnd($event)"
 >
   @switch (state()) {
     @case ('recording') {

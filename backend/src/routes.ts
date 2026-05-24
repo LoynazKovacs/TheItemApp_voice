@@ -138,10 +138,39 @@ export function registerRoutes(app: FastifyInstance, deps: RouteDeps): void {
       return reply.code(400).send({ error: 'Missing audio file' });
     }
 
+    // Normalize through ffmpeg → 24 kHz mono PCM WAV before forwarding to
+    // omnivoice. The browser's MediaRecorder occasionally produces truncated
+    // webm payloads (EBML header but no audio cluster) when the user releases
+    // the push-to-talk button before the muxer flushes a cluster — libav
+    // inside omnivoice rejects those with EOFError. ffmpeg is permissive and
+    // can salvage any decodable audio, so transcoding here turns a hard
+    // failure into either a successful transcription or a clean
+    // "no audio captured" 400.
+    let wavBuffer: Buffer;
+    let wavFilename = replaceExt(fileName, 'wav');
     try {
-      const result = await deps.omnivoiceClient.transcribe(fileBuffer, {
-        filename: fileName,
-        mimeType: fileMime,
+      const out = await transcodeToWav(fileBuffer);
+      wavBuffer = out.wav;
+      if (out.durationS !== null && out.durationS < 0.1) {
+        return reply.code(400).send({ ok: false, error: 'Recording too short — no audio captured.' });
+      }
+    } catch (error) {
+      request.log.warn({
+        err: error,
+        errorMessage: error instanceof Error ? error.message : String(error),
+        fileMime,
+        bytes: fileBuffer.length,
+      }, 'STT input transcode failed');
+      return reply.code(400).send({
+        ok: false,
+        error: 'Could not decode the recorded audio. Try recording again.',
+      });
+    }
+
+    try {
+      const result = await deps.omnivoiceClient.transcribe(wavBuffer, {
+        filename: wavFilename,
+        mimeType: 'audio/wav',
         language,
         task,
       });
