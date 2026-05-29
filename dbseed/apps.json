@@ -5,7 +5,7 @@
     },
     "key": "voice",
     "name": "Voice",
-    "description": "Text-to-speech and speech-to-text studio. Provides federated prefabs (mic button, speaker toggle, studio) that any app can drop in to give users a voice.",
+    "description": "Text-to-speech, speech-to-text, and voice cloning for TheItemApp, backed by a voice-api proxy over an OmniVoice engine. Ships federated prefabs — Studio (type-to-speak + transcribe), Dictaphone (record/import audio into transcribed voice notes), a push-to-talk Mic Button and Speaker that any app can embed, and voice Settings — over two data models: a catalog of cloneable voices and the user's voice notes.",
     "icon": "lucide:mic",
     "enabled": true,
     "groupIds": [

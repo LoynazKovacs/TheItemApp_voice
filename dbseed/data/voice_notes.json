@@ -95,5 +95,131 @@
     "durationMs": 15412,
     "mimeType": "audio/wav",
     "groupIds": []
+  },
+  {
+    "_id": {
+      "$oid": "6a0f8ddd520efe7ec044ba89"
+    },
+    "title": "audio_2026-05-22_00-49-10",
+    "audioFileId": {
+      "$oid": "6a0f8dd624bca4060744ba89"
+    },
+    "transcript": "Ez lesz az új magyar hangja az alkalmazásnak, amiben bemutatom, hogyan tudod a legtöbbet kihozni abból, amit ez a rendszer tud.",
+    "language": "hu",
+    "durationMs": 8920,
+    "mimeType": "audio/wav",
+    "groupIds": []
+  },
+  {
+    "_id": {
+      "$oid": "6a0f8ee061fd2af1c444ba8a"
+    },
+    "title": "TTS teszt — új magyar hang",
+    "audioFileId": {
+      "$oid": "6a0f8ee061fd2af1c444ba89"
+    },
+    "transcript": "Sziasztok! Ez itt egy teszt a frissen készült magyar hangommal. Remélem, jól sikerült a klónozás!",
+    "language": "hu",
+    "durationMs": 7240,
+    "mimeType": "audio/wav",
+    "groupIds": []
+  },
+  {
+    "_id": {
+      "$oid": "6a0f9367abf9923632c9b7d4"
+    },
+    "title": "dani_hun",
+    "audioFileId": {
+      "$oid": "6a0f9367abf9923632c9b7d2"
+    },
+    "transcript": "Sziasztok! Ez az applikáció, ez nagyon jó!  Gyertek, tanuljátok meg, hogy hogyan működik, és akkor ki fogjátok tudni használni az összes!",
+    "language": "hu",
+    "durationMs": 1,
+    "mimeType": "audio/wav",
+    "groupIds": []
+  },
+  {
+    "_id": {
+      "$oid": "6a0f936fabf9923632c9b83c"
+    },
+    "title": "dani_es",
+    "audioFileId": {
+      "$oid": "6a0f936fabf9923632c9b83a"
+    },
+    "transcript": "Bienvenidos a Madrid. Ahora les vamos a enseñar cómo esta aplicación funciona y cuáles son las mejores propiedades que tiene.  Disfrutad con este camino que os va a enseñar a hacer todo tipo de cosas.",
+    "language": "es",
+    "durationMs": 1,
+    "mimeType": "audio/wav",
+    "groupIds": []
+  },
+  {
+    "_id": {
+      "$oid": "6a0f93ddabf9923632c9bb78"
+    },
+    "title": "dani_en",
+    "audioFileId": {
+      "$oid": "6a0f93ddabf9923632c9bb76"
+    },
+    "transcript": "Come check this out. This application is awesome. We have to check it out and see what it can do",
+    "language": "en",
+    "durationMs": 1,
+    "mimeType": "audio/wav",
+    "groupIds": []
+  },
+  {
+    "_id": {
+      "$oid": "6a0f9524abf9923632c9d1da"
+    },
+    "title": "ace ventura",
+    "audioFileId": {
+      "$oid": "6a0f9524abf9923632c9d1d8"
+    },
+    "transcript": "",
+    "language": "nn",
+    "durationMs": 1,
+    "mimeType": "audio/wav",
+    "groupIds": []
+  },
+  {
+    "_id": {
+      "$oid": "6a0f9d3dabf9923632ca2397"
+    },
+    "title": "ace ventura",
+    "audioFileId": {
+      "$oid": "6a0f9d3dabf9923632ca2395"
+    },
+    "transcript": "",
+    "language": "nn",
+    "durationMs": 1,
+    "mimeType": "audio/wav",
+    "groupIds": []
+  },
+  {
+    "_id": {
+      "$oid": "6a0f9d47abf9923632ca23f2"
+    },
+    "title": "ace ventura",
+    "audioFileId": {
+      "$oid": "6a0f9d47abf9923632ca23f0"
+    },
+    "transcript": "",
+    "language": "nn",
+    "durationMs": 1,
+    "mimeType": "audio/wav",
+    "groupIds": []
+  },
+  {
+    "_id": {
+      "$oid": "6a0face1abf9923632cbbcf8"
+    },
+    "title": "cartman",
+    "audioFileId": {
+      "$oid": "6a0face1abf9923632cbbcf6"
+    },
+    "transcript": "Na, mi van, gyíkok?  Tekergetjük a rádiót? Tekergetjük?  Csipázjátok a tilost, mi?  De mégis mit gondoltok?  Mi a szarból működik ez az egész?  Na, idefigyeljetek, adócsalók!  Most szépen előveszitek a papírt,  és elkülditek azt a szaros  egy százalékotokat a Tilosnak!  A másik tizet meg nekem! Vágom?  De azt mondják, baszki hogy kell hozzá egy rohadthosszú szám! Ó bazd!  Tizennyolc,  nulla nulla, huszonnégy,  ötvennégy,  kötőjel kettő,  kötőjel negyvenhárom,  a picsába ez kurva sok! Ja?  Ja meg a Tilos kulturális  alapítvány, meg ilyenek!",
+    "language": "hu",
+    "durationMs": 40981,
+    "mimeType": "audio/wav",
+    "groupIds": []
   }
 ]

@@ -1,6 +1,27 @@
 [
   {
     "_id": {
+      "$oid": "6a0f8e38abf9923632c9657e"
+    },
+    "key": "audio-2026-05-22-00-49-10-44ba89",
+    "displayName": "Bence jó minőségű",
+    "engine": "omnivoice",
+    "profileId": "f1c171d0",
+    "audioFileId": {
+      "$oid": "6a0f8dd624bca4060744ba89"
+    },
+    "refText": "Ez lesz az új magyar hangja az alkalmazásnak, amiben bemutatom, hogyan tudod a legtöbbet kihozni abból, amit ez a rendszer tud.",
+    "language": "hu",
+    "style": [],
+    "enabled": true,
+    "groupIds": [
+      {
+        "$oid": "7000000000000000001d0002"
+      }
+    ]
+  },
+  {
+    "_id": {
       "$oid": "6a0f884aabf9923632c8eeae"
     },
     "key": "bence",
@@ -22,6 +43,69 @@
   },
   {
     "_id": {
+      "$oid": "6a0faf18abf9923632cbeaa1"
+    },
+    "key": "cartman-cbbcf8",
+    "displayName": "cartman",
+    "engine": "omnivoice",
+    "profileId": "f449d5ba",
+    "audioFileId": {
+      "$oid": "6a0face1abf9923632cbbcf6"
+    },
+    "refText": "Na, mi van, gyíkok?  Tekergetjük a rádiót? Tekergetjük?  Csipázjátok a tilost, mi?  De mégis mit gondoltok?  Mi a szarból működik ez az egész?  Na, idefigyeljetek, adócsalók!  Most szépen előveszitek a papírt,  és elkülditek azt a szaros  egy százalékotokat a Tilosnak!  A másik tizet meg nekem! Vágom?  De azt mondják, baszki hogy kell hozzá egy rohadthosszú szám! Ó bazd!  Tizennyolc,  nulla nulla, huszonnégy,  ötvennégy,  kötőjel kettő,  kötőjel negyvenhárom,  a picsába ez kurva sok! Ja?  Ja meg a Tilos kulturális  alapítvány, meg ilyenek!",
+    "language": "hu",
+    "style": [],
+    "enabled": true,
+    "groupIds": [
+      {
+        "$oid": "7000000000000000001d0002"
+      }
+    ]
+  },
+  {
+    "_id": {
+      "$oid": "6a0f9536abf9923632c9d34f"
+    },
+    "key": "dani-en-c9bb78",
+    "displayName": "dani_en",
+    "engine": "omnivoice",
+    "profileId": "b8f9c2a0",
+    "audioFileId": {
+      "$oid": "6a0f93ddabf9923632c9bb76"
+    },
+    "refText": "Come check this out. This application is awesome. We have to check it out and see what it can do",
+    "language": "en",
+    "style": [],
+    "enabled": true,
+    "groupIds": [
+      {
+        "$oid": "7000000000000000001d0002"
+      }
+    ]
+  },
+  {
+    "_id": {
+      "$oid": "6a0f9533abf9923632c9d2de"
+    },
+    "key": "dani-es-c9b83c",
+    "displayName": "dani_es",
+    "engine": "omnivoice",
+    "profileId": "b47156ca",
+    "audioFileId": {
+      "$oid": "6a0f936fabf9923632c9b83a"
+    },
+    "refText": "Bienvenidos a Madrid. Ahora les vamos a enseñar cómo esta aplicación funciona y cuáles son las mejores propiedades que tiene.  Disfrutad con este camino que os va a enseñar a hacer todo tipo de cosas.",
+    "language": "es",
+    "style": [],
+    "enabled": true,
+    "groupIds": [
+      {
+        "$oid": "7000000000000000001d0002"
+      }
+    ]
+  },
+  {
+    "_id": {
       "$oid": "6a0f89b4abf9923632c9004e"
     },
     "key": "dani-hu",
@@ -32,6 +116,27 @@
       "$oid": "6a0f8979abf9923632c8fe60"
     },
     "refText": "Most ezzel csináljunk egy új hangot, amivel bemutatjuk Dániel csodálatos hangját. Ez egy kicsit hosszabb lesz, mint a többi, de megéri, mert sokkal több információ lesz minden egyes szóban.",
+    "language": "hu",
+    "style": [],
+    "enabled": true,
+    "groupIds": [
+      {
+        "$oid": "7000000000000000001d0002"
+      }
+    ]
+  },
+  {
+    "_id": {
+      "$oid": "6a0f9531abf9923632c9d267"
+    },
+    "key": "dani-hun-c9b7d4",
+    "displayName": "dani_hun",
+    "engine": "omnivoice",
+    "profileId": "0f48ba94",
+    "audioFileId": {
+      "$oid": "6a0f9367abf9923632c9b7d2"
+    },
+    "refText": "Sziasztok! Ez az applikáció, ez nagyon jó!  Gyertek, tanuljátok meg, hogy hogyan működik, és akkor ki fogjátok tudni használni az összes!",
     "language": "hu",
     "style": [],
     "enabled": true,
@@ -85,6 +190,26 @@
       {
         "$oid": "7000000000000000001d0001"
       },
+      {
+        "$oid": "7000000000000000001d0002"
+      }
+    ]
+  },
+  {
+    "_id": {
+      "$oid": "6a0f8e99cbbaf87a6f44ba89"
+    },
+    "key": "magyar-hang-test-44ba89",
+    "displayName": "audio_2026-05-22_00-49-10",
+    "engine": "omnivoice",
+    "profileId": "364565a2",
+    "audioFileId": {
+      "$oid": "6a0f8dd624bca4060744ba89"
+    },
+    "refText": "Ez lesz az új magyar hangja az alkalmazásnak, amiben bemutatom, hogyan tudod a legtöbbet kihozni abból, amit ez a rendszer tud.",
+    "language": "hu",
+    "enabled": true,
+    "groupIds": [
       {
         "$oid": "7000000000000000001d0002"
       }
