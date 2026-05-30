@@ -70,7 +70,7 @@ All endpoints are auth-gated (core token/cookie) except the health checks:
 | `GET  /api/health`             | Liveness check for the proxy itself.                                                      |
 | `GET  /api/upstreams/health`   | OmniVoice reachability (with back-compat `tts`/`stt` aliases).                             |
 | `GET  /api/voices`             | List OmniVoice voices.                                                                     |
-| `POST /api/tts`                | Text → speech. Returns the encoded audio (mp3 by default).                                |
+| `POST /api/tts`                | Text → speech. Defaults `response_format` to mp3, but OmniVoice always emits WAV — the upstream audio bytes (`audio/wav`) are forwarded as-is. |
 | `POST /api/stt`                | Multipart audio → transcript. Transcodes to 24 kHz mono WAV via ffmpeg first.             |
 | `POST /api/import-media`       | One file (audio or video) → ffmpeg → STT → upload WAV to core → create a `voice_notes` row. |
 | `POST /api/voice-from-note/:noteId` | Turn a voice note into a `voice_voices` row and kick the reconciler to provision it. |
@@ -125,10 +125,13 @@ To swap in your own reference voice:
 ## Usage
 
 ```bash
-docker compose up -d --build
+npm start   # docker compose up -d --build
+npm stop    # docker compose stop
 ```
 
-Brings up the full stack on the shared `theitemapp` Docker network.
+Brings up the full stack on the shared `theitemapp` Docker network. The
+`start`/`stop` scripts in `package.json` are thin wrappers over the equivalent
+`docker compose` commands.
 
 Run on a CPU-only host by overriding `OMNIVOICE_IMAGE` with the upstream CPU
 tag (when available) and removing the `deploy.resources.reservations.devices`
