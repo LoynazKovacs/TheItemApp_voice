@@ -7,3 +7,5 @@ out-tsc
 
 # Diagnostic samples generated during TTS debug — not source artifacts.
 .diag-samples/
+.claude/
+.screenshots/
