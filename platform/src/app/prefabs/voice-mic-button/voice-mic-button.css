@@ -5,6 +5,41 @@
   font: inherit;
 }
 
+.micRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.modeToggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid var(--border, #444);
+  background: var(--surface-2, #222);
+  color: inherit;
+  cursor: pointer;
+  flex: 0 0 auto;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+
+.modeToggle:hover {
+  background: var(--surface-3, #2a2a2a);
+}
+
+.modeToggle.on {
+  background: #15803d;
+  color: #fff;
+  border-color: #15803d;
+}
+.modeToggle.on:hover {
+  background: #166534;
+}
+
 .micBtn {
   display: inline-flex;
   align-items: center;
@@ -50,6 +85,26 @@
   background: #b3261e;
   color: #fff;
   border-color: #b3261e;
+}
+
+/* Hands-free armed: persistent green, matching the auto-speak speaker's armed
+   look. Wins over .recording (red) because PTT is disabled while armed. */
+.micBtn.handsFree {
+  background: #15803d;
+  color: #fff;
+  border-color: #15803d;
+}
+.micBtn.handsFree:hover:not(:disabled) {
+  background: #166534;
+}
+/* Pulse the ring while actively capturing a detected utterance. */
+.micBtn.handsFree.listening {
+  animation: hf-pulse 1.2s infinite ease-in-out;
+}
+
+@keyframes hf-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(21, 128, 61, 0.5); }
+  50% { box-shadow: 0 0 0 4px rgba(21, 128, 61, 0); }
 }
 
 .micBtn.busy {
