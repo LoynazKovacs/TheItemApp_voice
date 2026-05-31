@@ -5,6 +5,7 @@ import { SeedRegistry } from './seedRegistry.js';
 import type { VoiceProfileReconciler } from './voiceProfileReconciler.js';
 import type { AppConfig } from './config.js';
 import { transcodeToWav } from './mediaTranscoder.js';
+import { PiperClient } from './piperClient.js';
 
 interface RouteDeps {
   config: AppConfig;
@@ -34,6 +35,14 @@ function createAuthPreHandler(coreApi: CoreApiClient) {
 
 export function registerRoutes(app: FastifyInstance, deps: RouteDeps): void {
   const requireAuth = createAuthPreHandler(deps.coreApi);
+
+  // Local, non-cloning TTS engine. Voices whose `profileId` is `piper:<model>`
+  // are synthesised here instead of being forwarded to OmniVoice.
+  const piper = new PiperClient({
+    binDir: deps.config.piperBinDir,
+    modelDir: deps.config.piperModelDir,
+    espeakDataDir: deps.config.piperEspeakDataDir,
+  });
 
   app.get('/api/health', async () => ({
     ok: true,
@@ -76,6 +85,34 @@ export function registerRoutes(app: FastifyInstance, deps: RouteDeps): void {
     }
 
     const responseFormat = (body.response_format as SpeechRequest['response_format']) || 'mp3';
+
+    const requestedVoice = (body.voice || deps.config.defaultVoice || '').trim();
+
+    // Piper voices (engine `piper`, profileId `piper:<model>`) synthesise
+    // locally — no cloning, no OmniVoice round-trip. Piper always emits WAV;
+    // the browser players treat the audio/wav response the same as OmniVoice's.
+    if (requestedVoice.startsWith('piper:')) {
+      if (!piper.isAvailable()) {
+        return reply.code(503).send({ error: 'Piper engine not available on this deployment' });
+      }
+      const modelPath = piper.resolveModel(requestedVoice);
+      if (!modelPath) {
+        return reply.code(404).send({ error: `Piper voice not installed: ${requestedVoice}` });
+      }
+      try {
+        const wav = await piper.synthesize(
+          modelPath,
+          input,
+          typeof body.speed === 'number' ? body.speed : 1,
+        );
+        reply.header('content-type', 'audio/wav');
+        reply.header('cache-control', 'no-store');
+        return reply.send(wav);
+      } catch (error) {
+        request.log.error({ error, voice: requestedVoice }, 'Piper TTS failed');
+        return reply.code(502).send({ error: 'Piper synthesis failed' });
+      }
+    }
 
     try {
       const upstream = await deps.omnivoiceClient.speech({

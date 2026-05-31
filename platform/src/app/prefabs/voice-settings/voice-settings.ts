@@ -99,7 +99,10 @@ export class VoiceSettingsComponent implements OnInit {
       // Fetch in parallel — voices are public-ish, user config is per-user.
       const [voicesRes, configRes] = await Promise.all([
         firstValueFrom(this.http.get<unknown>('/api/dynamic/voice_voices', {
-          params: { _l: 200, _sort: 'order', _f: JSON.stringify({ enabled: true }) },
+          // Core dynamic-list sort param is `_s` (not `_sort`). An unrecognised
+          // `_sort` survives as an exact-match filter `{_sort:'order'}`, which
+          // matches no document and silently empties the picker.
+          params: { _l: 200, _s: 'order', _f: JSON.stringify({ enabled: true }) },
         })),
         firstValueFrom(this.http.get<unknown>('/api/dynamic/user_ui_configs', { params: { _l: 1 } })),
       ]);

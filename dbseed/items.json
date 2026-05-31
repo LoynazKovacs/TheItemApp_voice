@@ -232,9 +232,10 @@
         "engine": {
           "type": "string",
           "title": "Engine",
-          "description": "TTS engine that backs this voice. Only `omnivoice` is supported today; the enum is kept open for future engines.",
+          "description": "TTS engine that backs this voice. `omnivoice` clones a reference recording; `piper` is a local, MIT-licensed neural engine that synthesises from a built-in open-source voice model (no cloning) — used when `profileId` is `piper:<model>`.",
           "enum": [
-            "omnivoice"
+            "omnivoice",
+            "piper"
           ],
           "default": "omnivoice"
         },

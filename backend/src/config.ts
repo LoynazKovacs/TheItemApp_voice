@@ -10,6 +10,9 @@ export interface AppConfig {
   appRegistrationKey: string | null;
   registrationBaseUrl: string;
   registrationHeartbeatMs: number;
+  piperBinDir: string;
+  piperModelDir: string;
+  piperEspeakDataDir: string;
 }
 
 function parsePort(value: string | undefined, fallback: number): number {
@@ -38,5 +41,8 @@ export function getConfig(): AppConfig {
     appRegistrationKey: (process.env.APP_REGISTRATION_KEY ?? '').trim() || null,
     registrationBaseUrl: (process.env.VOICE_REGISTRATION_BASE_URL ?? '').trim() || `http://voice-api:${port}`,
     registrationHeartbeatMs: parseTimeoutMs(process.env.VOICE_REGISTRATION_HEARTBEAT_MS, 5 * 60 * 1000),
+    piperBinDir: (process.env.PIPER_BIN_DIR ?? '').trim() || '/opt/piper',
+    piperModelDir: (process.env.PIPER_MODEL_DIR ?? '').trim() || '/opt/piper/models',
+    piperEspeakDataDir: (process.env.PIPER_ESPEAK_DATA_DIR ?? '').trim() || '/opt/piper/espeak-ng-data',
   };
 }

@@ -16,6 +16,35 @@ WORKDIR /app
 COPY backend/package.json backend/package-lock.json* ./
 RUN npm install --omit=dev
 
+# ---------------------------------------------------------------------------
+# Piper TTS engine + a curated set of permissively-licensed (CC0 / public
+# domain / CC BY 4.0) neural voices. Piper is MIT-licensed, runs on CPU, and
+# ships as a self-contained binary — no Python. Voices are synthesised locally
+# (no cloning) for `voice_voices` rows whose profileId is `piper:<model>`.
+# ---------------------------------------------------------------------------
+FROM node:20-bookworm-slim AS piper
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends curl ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
+WORKDIR /opt/piper
+RUN curl -fsSL -o /tmp/piper.tar.gz \
+      "https://github.com/rhasspy/piper/releases/download/2023.11.14-2/piper_linux_x86_64.tar.gz" \
+  && tar xzf /tmp/piper.tar.gz --strip-components=1 -C /opt/piper \
+  && rm /tmp/piper.tar.gz
+RUN mkdir -p /opt/piper/models \
+  && cd /opt/piper/models \
+  && base="https://huggingface.co/rhasspy/piper-voices/resolve/main/en" \
+  && for v in \
+       "en_US/joe/medium|en_US-joe-medium" \
+       "en_US/kristin/medium|en_US-kristin-medium" \
+       "en_GB/cori/high|en_GB-cori-high" \
+       "en_US/libritts_r/medium|en_US-libritts_r-medium" \
+       "en_GB/alba/medium|en_GB-alba-medium"; do \
+       sub="${v%%|*}"; stem="${v##*|}"; \
+       curl -fsSL -o "$stem.onnx"      "$base/$sub/$stem.onnx"; \
+       curl -fsSL -o "$stem.onnx.json" "$base/$sub/$stem.onnx.json"; \
+     done
+
 FROM node:20-bookworm-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
@@ -27,6 +56,7 @@ RUN apt-get update \
 COPY --from=build /app/dist ./dist
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=build /app/package.json ./
+COPY --from=piper /opt/piper /opt/piper
 COPY dbseed ./dbseed
 
 USER node

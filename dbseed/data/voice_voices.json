@@ -253,5 +253,89 @@
     "style": [],
     "enabled": true,
     "groupIds": []
+  },
+  {
+    "_id": { "$oid": "860000000000000000040002" },
+    "key": "piper-joe-en-us",
+    "displayName": "Joe (US, open source)",
+    "description": "Open-source neural voice — Piper engine, no cloning. Dataset license: **CC0 / public domain** (free for any use, including monetized video, no attribution required).",
+    "engine": "piper",
+    "profileId": "piper:en_US-joe-medium",
+    "language": "en",
+    "gender": "male",
+    "style": ["narrator", "open-source"],
+    "enabled": true,
+    "order": 100,
+    "groupIds": [
+      { "$oid": "7000000000000000001d0001" },
+      { "$oid": "7000000000000000001d0002" }
+    ]
+  },
+  {
+    "_id": { "$oid": "860000000000000000040003" },
+    "key": "piper-kristin-en-us",
+    "displayName": "Kristin (US, open source)",
+    "description": "Open-source neural voice — Piper engine, no cloning. Dataset license: **public domain** (LibriVox). Free for any use, including monetized video.",
+    "engine": "piper",
+    "profileId": "piper:en_US-kristin-medium",
+    "language": "en",
+    "gender": "female",
+    "style": ["narrator", "open-source"],
+    "enabled": true,
+    "order": 101,
+    "groupIds": [
+      { "$oid": "7000000000000000001d0001" },
+      { "$oid": "7000000000000000001d0002" }
+    ]
+  },
+  {
+    "_id": { "$oid": "860000000000000000040004" },
+    "key": "piper-cori-en-gb",
+    "displayName": "Cori (UK, open source)",
+    "description": "Open-source neural voice — Piper engine, no cloning. Dataset license: **public domain** (LibriVox). High-quality British English. Free for any use, including monetized video.",
+    "engine": "piper",
+    "profileId": "piper:en_GB-cori-high",
+    "language": "en",
+    "gender": "female",
+    "style": ["narrator", "open-source"],
+    "enabled": true,
+    "order": 102,
+    "groupIds": [
+      { "$oid": "7000000000000000001d0001" },
+      { "$oid": "7000000000000000001d0002" }
+    ]
+  },
+  {
+    "_id": { "$oid": "860000000000000000040005" },
+    "key": "piper-libritts-en-us",
+    "displayName": "LibriTTS-R (US, open source)",
+    "description": "Open-source neural voice — Piper engine, no cloning. Dataset license: **CC BY 4.0** (commercial use allowed; a one-line credit to the LibriTTS-R dataset is required). Highest fidelity of the set.",
+    "engine": "piper",
+    "profileId": "piper:en_US-libritts_r-medium",
+    "language": "en",
+    "style": ["narrator", "open-source"],
+    "enabled": true,
+    "order": 103,
+    "groupIds": [
+      { "$oid": "7000000000000000001d0001" },
+      { "$oid": "7000000000000000001d0002" }
+    ]
+  },
+  {
+    "_id": { "$oid": "860000000000000000040006" },
+    "key": "piper-alba-en-gb",
+    "displayName": "Alba (UK, open source)",
+    "description": "Open-source neural voice — Piper engine, no cloning. Dataset license: **CC BY 4.0** (commercial use allowed; a one-line credit is required). British English female.",
+    "engine": "piper",
+    "profileId": "piper:en_GB-alba-medium",
+    "language": "en",
+    "gender": "female",
+    "style": ["narrator", "open-source"],
+    "enabled": true,
+    "order": 104,
+    "groupIds": [
+      { "$oid": "7000000000000000001d0001" },
+      { "$oid": "7000000000000000001d0002" }
+    ]
   }
 ]
