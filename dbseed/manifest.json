@@ -158,6 +158,27 @@
         "groupIds"
       ],
       "filter": { "appId": "<thisAppId>" }
+    },
+    {
+      "collection": "scenarios",
+      "file": "scenarios.json",
+      "matchBy": "key",
+      "installMode": "shared",
+      "exportFields": [
+        "key",
+        "title",
+        "subtitle",
+        "description",
+        "appKey",
+        "mode",
+        "trigger",
+        "audience",
+        "isPublished",
+        "version",
+        "tags",
+        "steps"
+      ],
+      "filter": { "appKey": "voice" }
     }
   ],
   "routes": [
