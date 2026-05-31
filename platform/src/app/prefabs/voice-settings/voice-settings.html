@@ -34,6 +34,27 @@
   </section>
 
   <section class="vsPanel">
+    <h3>Hands-free</h3>
+    <p class="hint">When the mic is in continuous-listening mode, your spoken message is sent automatically after you pause. Tune how long that pause must be — shorter feels snappier, longer avoids cutting you off mid-thought.</p>
+    <div class="row">
+      <label class="field speedField">
+        <span>Idle send delay</span>
+        <div class="speedRow">
+          <input
+            type="range"
+            min="500"
+            max="6000"
+            step="100"
+            [ngModel]="idleSendMs()"
+            (ngModelChange)="setIdleSendMs($event)"
+          />
+          <span class="speedReadout">{{ (idleSendMs() / 1000).toFixed(1) }}s</span>
+        </div>
+      </label>
+    </div>
+  </section>
+
+  <section class="vsPanel">
     <header class="panelHeader">
       <h3>Voice</h3>
       @if (selectedRow(); as cur) {

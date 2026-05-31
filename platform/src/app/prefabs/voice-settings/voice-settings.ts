@@ -68,6 +68,8 @@ export class VoiceSettingsComponent implements OnInit {
   selectedId = signal<string | null>(null);
   speed = signal<number>(1.0);
   autoMode = signal<boolean>(false);
+  /** Hands-free trailing-silence delay (ms) before an utterance auto-sends. */
+  idleSendMs = signal<number>(2000);
 
   /** _id of the user's user_ui_configs doc — needed to PATCH preferences. */
   private configDocId: string | null = null;
@@ -117,7 +119,7 @@ export class VoiceSettingsComponent implements OnInit {
       const configDoc = Array.isArray(configRes) ? (configRes[0] as Record<string, unknown> | undefined) : undefined;
       this.configDocId = typeof configDoc?.['_id'] === 'string' ? (configDoc['_id'] as string) : null;
       const voicePref = (configDoc?.['voice'] as
-        | { selectedVoiceId?: unknown; speed?: number; autoMode?: boolean }
+        | { selectedVoiceId?: unknown; speed?: number; autoMode?: boolean; idleSendMs?: number }
         | undefined) ?? undefined;
       const rawSel = voicePref?.selectedVoiceId;
       // user_ui_configs.voice.selectedVoiceId is an x-ref to voice_voices —
@@ -131,6 +133,7 @@ export class VoiceSettingsComponent implements OnInit {
       this.selectedId.set(selId);
       if (typeof voicePref?.speed === 'number') this.speed.set(voicePref.speed);
       if (typeof voicePref?.autoMode === 'boolean') this.autoMode.set(voicePref.autoMode);
+      if (typeof voicePref?.idleSendMs === 'number') this.idleSendMs.set(voicePref.idleSendMs);
     } catch (err) {
       this.loadError.set(err instanceof Error ? err.message : String(err));
     } finally {
@@ -171,6 +174,20 @@ export class VoiceSettingsComponent implements OnInit {
     const ok = await this.patchConfig({ 'voice.autoMode': v });
     if (!ok) {
       this.autoMode.set(previous);
+      this.cdr.markForCheck();
+    }
+  }
+
+  async setIdleSendMs(v: number | string): Promise<void> {
+    const n = typeof v === 'string' ? parseFloat(v) : v;
+    if (!Number.isFinite(n)) return;
+    const clamped = Math.min(6000, Math.max(500, Math.round(n / 100) * 100));
+    const previous = this.idleSendMs();
+    this.idleSendMs.set(clamped);
+    this.cdr.markForCheck();
+    const ok = await this.patchConfig({ 'voice.idleSendMs': clamped });
+    if (!ok) {
+      this.idleSendMs.set(previous);
       this.cdr.markForCheck();
     }
   }

@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, HostListener, OnDestroy, EventEmitter, Output, inject, input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { VoiceApiService } from '../../services/voice-api.service';
+import { UserVoicePrefsService } from '../../services/user-voice-prefs.service';
 
 /**
  * Mic button with two input modes:
@@ -34,13 +35,23 @@ import { VoiceApiService } from '../../services/voice-api.service';
 export class VoiceMicButtonComponent implements OnDestroy {
   private readonly api = inject(VoiceApiService);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly prefs = inject(UserVoicePrefsService);
 
   readonly windowId = input<string>('');
   readonly language = input<string | null>(null);
   readonly label = input<string>('Push to talk');
 
-  /** Hands-free: milliseconds of trailing silence that ends an utterance. */
-  readonly silenceMs = input<number>(2000);
+  /**
+   * Hands-free: milliseconds of trailing silence that ends an utterance.
+   * `0` (default) means "use the user's `voice.idleSendMs` preference"; an
+   * explicit positive value from a host overrides the preference.
+   */
+  readonly silenceMs = input<number>(0);
+  /** Resolved trailing-silence delay: explicit input wins, else the user pref. */
+  private effectiveSilenceMs(): number {
+    const explicit = this.silenceMs();
+    return explicit && explicit > 0 ? explicit : this.prefs.idleSendMs();
+  }
   /**
    * Hands-free: absolute RMS floor (0..1). A frame is never treated as speech
    * below this, regardless of the adaptive noise floor — guards against the
@@ -262,6 +273,8 @@ export class VoiceMicButtonComponent implements OnDestroy {
     }
     // Don't arm in the middle of a push-to-talk capture.
     if (this.state() !== 'idle') return;
+    // Make sure the user's idle-send preference is loaded so the VAD uses it.
+    void this.prefs.ensureLoaded();
     await this.armHandsFree();
   }
 
@@ -351,7 +364,7 @@ export class VoiceMicButtonComponent implements OnDestroy {
       rms * VoiceMicButtonComponent.NOISE_EMA;
 
     // Close the utterance once the trailing silence exceeds the threshold.
-    if (this.segmentActive && now - this.lastVoiceAt >= this.silenceMs()) {
+    if (this.segmentActive && now - this.lastVoiceAt >= this.effectiveSilenceMs()) {
       if (this.voicedMs >= VoiceMicButtonComponent.MIN_SPEECH_MS) {
         if (this.vadDebug) console.log('[vad] silence → finalize segment', { voicedMs: this.voicedMs });
         this.stopSegment();          // → finalizeSegment via onstop

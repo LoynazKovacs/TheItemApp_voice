@@ -38,6 +38,8 @@ export class UserVoicePrefsService {
   readonly selectedVoiceId = signal<string | null>(null);
   readonly speed = signal<number>(1.0);
   readonly autoMode = signal<boolean>(false);
+  /** Hands-free trailing-silence delay (ms) before an utterance auto-sends. */
+  readonly idleSendMs = signal<number>(2000);
 
   readonly loaded = signal<boolean>(false);
   readonly error = signal<string | null>(null);
@@ -94,10 +96,11 @@ export class UserVoicePrefsService {
       );
       const doc = Array.isArray(rows) ? (rows[0] as Record<string, unknown> | undefined) : undefined;
       const voice = (doc?.['voice'] as
-        | { selectedVoiceId?: unknown; speed?: number; autoMode?: boolean }
+        | { selectedVoiceId?: unknown; speed?: number; autoMode?: boolean; idleSendMs?: number }
         | undefined) ?? undefined;
       if (typeof voice?.speed === 'number') this.speed.set(voice.speed);
       if (typeof voice?.autoMode === 'boolean') this.autoMode.set(voice.autoMode);
+      if (typeof voice?.idleSendMs === 'number') this.idleSendMs.set(voice.idleSendMs);
 
       // selectedVoiceId is an x-ref to voice_voices. The dynamic API populates
       // x-refs by default, so it usually comes back as an object `{_id, ...}`
