@@ -29,7 +29,7 @@ async function main(): Promise<void> {
     bodyLimit: 500 * 1024 * 1024,
   });
 
-  await app.register(cors, { origin: true, credentials: true });
+  await app.register(cors, { origin: false });
   await app.register(multipart, {
     limits: { fileSize: 500 * 1024 * 1024, files: 1 },
   });
