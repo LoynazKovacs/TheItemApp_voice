@@ -19,8 +19,7 @@ services:
     build:
       context: .
       dockerfile: platform/Dockerfile
-    ports:
-      - "${VOICE_WEB_PORT:-4206}:80"
+    # No host port: served only through core Caddy (/mf/voice/*).
     restart: unless-stopped
 
   voice-api:
@@ -38,8 +37,7 @@ services:
       VOICE_DEFAULT_VOICE: "${VOICE_DEFAULT_VOICE:-demo0001}"
       VOICE_DEFAULT_MODEL: "${VOICE_DEFAULT_MODEL:-omnivoice}"
       VOICE_UPSTREAM_TIMEOUT_MS: "${VOICE_UPSTREAM_TIMEOUT_MS:-120000}"
-    ports:
-      - "${VOICE_API_PORT:-3005}:3005"
+    # No host port: reached only in-network via core Caddy (/voice-api/*).
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3005/api/health', (r) => { r.resume(); process.exit(r.statusCode === 200 ? 0 : 1); }).on('error', () => process.exit(1));"]
       interval: 10s
@@ -70,8 +68,8 @@ services:
       TORCHDYNAMO_DISABLE: "1"
     volumes:
       - omnivoice-data:/app/omnivoice_data
-    ports:
-      - "${OMNIVOICE_PORT:-3900}:3900"
+    # No host port: engine reachable only by voice-api on the internal
+    # theitemapp network (http://omnivoice:3900).
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:3900/health"]
       interval: 30s

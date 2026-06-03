@@ -9,3 +9,15 @@ out-tsc
 .diag-samples/
 .claude/
 .screenshots/
+
+# --- secrets hygiene (security hardening) ---
+.env
+.env.*
+!.env.example
+.secrets/
+gcp-credentials/
+*.pem
+*.key
+*_ed25519
+*service-account*.json
+*-deployer.json
