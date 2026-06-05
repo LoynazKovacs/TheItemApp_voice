@@ -26,10 +26,10 @@
         "placement": "center",
         "title": "The Dictaphone",
         "body": "The **Dictaphone** turns speech into saved, searchable **Voice Notes** — record straight from your mic, or drop in an audio or video file and let it transcribe. Let's walk to it together.\n\nUse **Next** to step through, or **Esc** to leave anytime.",
+        "buttons": [],
         "beforeShow": {},
         "advanceOn": {},
         "modal": false,
-        "buttons": [],
         "assertions": []
       },
       {
@@ -38,6 +38,7 @@
         "placement": "right",
         "title": "Open your menu",
         "body": "Navigation always starts from the **Menu** button on the left. Click it to open your menu — I'll continue the moment it's open.",
+        "buttons": [],
         "beforeShow": {},
         "showIf": {
           "selectorExists": "[data-testid=\"sidebar-toolbar-button-left-menu\"]",
@@ -47,7 +48,6 @@
           "event": "click"
         },
         "modal": false,
-        "buttons": [],
         "assertions": []
       },
       {
@@ -56,13 +56,13 @@
         "placement": "right",
         "title": "The Apps section",
         "body": "Your menu lists every installed application here in the **Apps** section — **Voice** among them. Opening one takes you straight to its dashboards and tools.",
+        "buttons": [],
         "beforeShow": {
           "waitForSelector": "[data-testid=\"core.sidebar.apps\"]",
           "delayMs": 200
         },
         "advanceOn": {},
         "modal": false,
-        "buttons": [],
         "assertions": []
       },
       {
@@ -71,6 +71,7 @@
         "placement": "right",
         "title": "Open the Voice app",
         "body": "Click **Voice** to open it. Opening an app drops you onto its **home dashboard** — for Voice that's the **Voice Studio** board. From there we'll open the Dictaphone dashboard together. I'll continue once it loads.",
+        "buttons": [],
         "beforeShow": {
           "waitForSelector": "[data-testid=\"core.sidebar.app.voice\"]",
           "delayMs": 200
@@ -80,7 +81,6 @@
           "matchDescendant": ".labelBtn"
         },
         "modal": false,
-        "buttons": [],
         "assertions": []
       },
       {
@@ -89,6 +89,7 @@
         "placement": "right",
         "title": "Open the Dictaphone board",
         "body": "In the **Voice** app's **Dashboards**, click **Dictaphone** to open it. I'll continue once it loads.",
+        "buttons": [],
         "beforeShow": {
           "waitForSelector": "[data-testid=\"core.sidebar.dashboard.860000000000000000010003\"]",
           "delayMs": 200
@@ -100,7 +101,6 @@
           "event": "click"
         },
         "modal": false,
-        "buttons": [],
         "assertions": []
       },
       {
@@ -108,13 +108,13 @@
         "placement": "center",
         "title": "You're on the Dictaphone board",
         "body": "This board pairs the **Dictaphone** recorder on the left with your **Voice Notes** list on the right, so new notes appear right next to where you make them. Let's look at both.",
+        "buttons": [],
         "beforeShow": {
           "waitForSelector": "[data-testid=\"window-dictaphone\"]",
           "delayMs": 600
         },
         "advanceOn": {},
         "modal": false,
-        "buttons": [],
         "assertions": []
       },
       {
@@ -123,13 +123,13 @@
         "placement": "right",
         "title": "The Dictaphone recorder",
         "body": "This **Dictaphone** panel captures audio and transcribes it. Each note you save becomes a row in the `voice_notes` collection — the audio stored in core's files, the transcript stored alongside it.",
+        "buttons": [],
         "beforeShow": {
           "waitForSelector": "[data-testid=\"window-dictaphone\"]",
           "delayMs": 150
         },
         "advanceOn": {},
         "modal": false,
-        "buttons": [],
         "assertions": []
       },
       {
@@ -138,10 +138,10 @@
         "placement": "bottom",
         "title": "Language hint",
         "body": "Leave this on **Auto-detect**, or pick a language to nudge the transcriber when you know what you'll be speaking. It applies to both recordings and imports.",
+        "buttons": [],
         "beforeShow": {},
         "advanceOn": {},
         "modal": false,
-        "buttons": [],
         "assertions": []
       },
       {
@@ -150,10 +150,10 @@
         "placement": "right",
         "title": "Record from your mic",
         "body": "Press **Record** to start capturing from your microphone; the button becomes **Stop**. When you stop, you'll get a preview with an auto-filled, editable transcript and a title — then **Save**, **Re-record**, or **Discard**. No need to record right now.",
+        "buttons": [],
         "beforeShow": {},
         "advanceOn": {},
         "modal": false,
-        "buttons": [],
         "assertions": []
       },
       {
@@ -162,10 +162,10 @@
         "placement": "top",
         "title": "Or import a file",
         "body": "Already have audio or video? **Drop files here** or use **Choose files** — each is converted, transcribed, and saved as a Voice Note automatically, with progress shown below.",
+        "buttons": [],
         "beforeShow": {},
         "advanceOn": {},
         "modal": false,
-        "buttons": [],
         "assertions": []
       },
       {
@@ -174,13 +174,13 @@
         "placement": "left",
         "title": "Your Voice Notes",
         "body": "Every saved note lands in this **Voice Notes** list — the same `voice_notes` collection, showing title, audio, and transcript together so you can read and search them without playback. Click a row to open the full note.",
+        "buttons": [],
         "beforeShow": {
           "waitForSelector": "[data-testid=\"window-voice-notes\"]",
           "delayMs": 150
         },
         "advanceOn": {},
         "modal": false,
-        "buttons": [],
         "assertions": []
       },
       {
@@ -188,10 +188,10 @@
         "placement": "center",
         "title": "That's the Dictaphone",
         "body": "Record or import on the left, and your transcribed notes collect on the right. For quick type-to-speak and push-to-talk, try the **Voice Studio** from the menu.",
+        "buttons": [],
         "beforeShow": {},
         "advanceOn": {},
         "modal": false,
-        "buttons": [],
         "assertions": []
       }
     ]
@@ -209,7 +209,7 @@
     "trigger": "help-menu",
     "audience": "user",
     "isPublished": true,
-    "version": 2,
+    "version": 1,
     "tags": [
       "voice",
       "tool",
@@ -231,17 +231,18 @@
       },
       {
         "id": "open-menu",
-        "anchorKey": "sidebar-toolbar-button-left-menu",
+        "anchorKey": "sidebar-toolbar-row-left",
         "placement": "right",
-        "title": "Open your menu",
-        "body": "Navigation always starts from the **Menu** button on the left. Click it to open your menu — I'll continue the moment it's open.",
+        "title": "Open the menu",
+        "body": "Tools live in the **menu**. Click any of the highlighted buttons on the left edge to open it — I'll continue as soon as it's open.",
         "beforeShow": {},
         "showIf": {
-          "selectorExists": "[data-testid=\"sidebar-toolbar-button-left-menu\"]",
+          "selectorExists": "[data-testid=\"sidebar-toolbar-row-left\"] button",
           "selectorMissing": "[data-testid=\"sidebar-left\"].open, [data-testid=\"window-voice-dictaphone\"]"
         },
         "advanceOn": {
-          "event": "click"
+          "event": "click",
+          "matchDescendant": "button"
         },
         "modal": false,
         "buttons": [],
@@ -252,7 +253,7 @@
         "anchorSelector": "li.appBlock:has([data-testid=\"core.sidebar.dashboard.860000000000000000010001\"]) .subgroup:first-of-type ul.subRows > li:nth-child(3) .row.leaf.sub",
         "placement": "right",
         "title": "Launch the Dictaphone",
-        "body": "Under the **Voice** app's **Tools** section, click **Voice Dictaphone**. If the Voice app is collapsed, expand it first. It opens as its own window.",
+        "body": "Under the **Voice** app's **Tools** section, click **Voice Dictaphone**. (If the Voice app is collapsed, expand it first.) It opens as its own window.",
         "beforeShow": {
           "waitForSelector": "li.appBlock:has([data-testid=\"core.sidebar.dashboard.860000000000000000010001\"]) .subgroup:first-of-type ul.subRows > li:nth-child(3) .row.leaf.sub",
           "delayMs": 350
@@ -273,7 +274,7 @@
         "anchorSelector": "[data-testid=\"window-voice-dictaphone\"] voice-dictaphone .head",
         "placement": "bottom",
         "title": "Here it is",
-        "body": "The **Dictaphone** opened as a floating window. Drag its header to move it or close it with the **close** button when you're done — anything you save lands in your `voice_notes` either way.",
+        "body": "The **Dictaphone** opened as a floating window. Drag its header to move it or close it with the **✕** when you're done — anything you save lands in your Voice Notes either way.",
         "beforeShow": {
           "waitForSelector": "[data-testid=\"window-voice-dictaphone\"] voice-dictaphone .head",
           "delayMs": 300
@@ -288,7 +289,7 @@
         "anchorSelector": "[data-testid=\"window-voice-dictaphone\"] voice-dictaphone .bigBtn.record",
         "placement": "right",
         "title": "Record from your mic",
-        "body": "Press **Record** to start; the button becomes **Stop**. After stopping you'll get a preview with an editable, auto-filled transcript and a title — then **Save**, **Re-record**, or **Discard**. No need to record right now.",
+        "body": "Press **Record** to start; the button becomes **Stop**. After stopping you'll get a preview with an editable, auto-filled transcript and a title — then **Save**, **Re-record**, or **Discard**. (No need to record right now.)",
         "beforeShow": {},
         "advanceOn": {},
         "modal": false,
@@ -311,7 +312,7 @@
         "id": "done",
         "placement": "center",
         "title": "That's the tool",
-        "body": "Open the **Voice Dictaphone** from the menu whenever a thought strikes, capture it, and close it — your transcribed notes are always waiting in your Voice Notes list.",
+        "body": "Open the **Voice Dictaphone** from the menu whenever a thought strikes, capture it, and close it — your transcribed notes are always waiting on the Dictaphone dashboard's Voice Notes list.",
         "beforeShow": {},
         "advanceOn": {},
         "modal": false,
@@ -346,10 +347,10 @@
         "placement": "center",
         "title": "Voice Settings",
         "body": "**Voice Settings** is where you choose the voice and playback options used whenever the platform reads assistant messages aloud. Let's walk to it together.\n\nUse **Next** to step through, or **Esc** to leave anytime.",
+        "buttons": [],
         "beforeShow": {},
         "advanceOn": {},
         "modal": false,
-        "buttons": [],
         "assertions": []
       },
       {
@@ -358,6 +359,7 @@
         "placement": "right",
         "title": "Open your menu",
         "body": "Navigation always starts from the **Menu** button on the left. Click it to open your menu — I'll continue the moment it's open.",
+        "buttons": [],
         "beforeShow": {},
         "showIf": {
           "selectorExists": "[data-testid=\"sidebar-toolbar-button-left-menu\"]",
@@ -367,7 +369,6 @@
           "event": "click"
         },
         "modal": false,
-        "buttons": [],
         "assertions": []
       },
       {
@@ -376,13 +377,13 @@
         "placement": "right",
         "title": "The Apps section",
         "body": "Your menu lists every installed application here in the **Apps** section — **Voice** among them. Opening one takes you straight to its dashboards and tools.",
+        "buttons": [],
         "beforeShow": {
           "waitForSelector": "[data-testid=\"core.sidebar.apps\"]",
           "delayMs": 200
         },
         "advanceOn": {},
         "modal": false,
-        "buttons": [],
         "assertions": []
       },
       {
@@ -391,6 +392,7 @@
         "placement": "right",
         "title": "Open the Voice app",
         "body": "Click **Voice** to open it. Opening an app drops you onto its **home dashboard** — for Voice that's the **Voice Studio** board. From there we'll open the Settings dashboard together. I'll continue once it loads.",
+        "buttons": [],
         "beforeShow": {
           "waitForSelector": "[data-testid=\"core.sidebar.app.voice\"]",
           "delayMs": 200
@@ -400,7 +402,6 @@
           "matchDescendant": ".labelBtn"
         },
         "modal": false,
-        "buttons": [],
         "assertions": []
       },
       {
@@ -409,6 +410,7 @@
         "placement": "right",
         "title": "Open the Voice Settings board",
         "body": "In the **Voice** app's **Dashboards**, click **Voice Settings** to open it. I'll continue once it loads.",
+        "buttons": [],
         "beforeShow": {
           "waitForSelector": "[data-testid=\"core.sidebar.dashboard.860000000000000000010002\"]",
           "delayMs": 200
@@ -420,7 +422,6 @@
           "event": "click"
         },
         "modal": false,
-        "buttons": [],
         "assertions": []
       },
       {
@@ -428,13 +429,13 @@
         "placement": "center",
         "title": "You're on Voice Settings",
         "body": "This is the **Voice Settings** board. Everything on it saves to your profile and applies across every app that speaks text aloud. Let's walk through it.",
+        "buttons": [],
         "beforeShow": {
           "waitForSelector": "[data-testid=\"window-voice-settings\"]",
           "delayMs": 600
         },
         "advanceOn": {},
         "modal": false,
-        "buttons": [],
         "assertions": []
       },
       {
@@ -443,13 +444,13 @@
         "placement": "right",
         "title": "The Settings panel",
         "body": "This **Voice Settings** panel lists your voice catalog — the `voice_voices` collection — and saves your choices to your personal `user_ui_configs` record, so your selected voice and playback follow you everywhere.",
+        "buttons": [],
         "beforeShow": {
           "waitForSelector": "[data-testid=\"window-voice-settings\"]",
           "delayMs": 150
         },
         "advanceOn": {},
         "modal": false,
-        "buttons": [],
         "assertions": []
       },
       {
@@ -458,10 +459,10 @@
         "placement": "bottom",
         "title": "Playback speed",
         "body": "Drag the **Speed** slider to set how fast spoken messages play, from half speed to double. The readout beside it shows your current setting.",
+        "buttons": [],
         "beforeShow": {},
         "advanceOn": {},
         "modal": false,
-        "buttons": [],
         "assertions": []
       },
       {
@@ -470,10 +471,10 @@
         "placement": "bottom",
         "title": "Auto-speak",
         "body": "Turn this on to have **assistant messages read aloud automatically** by default — no need to press play each time.",
+        "buttons": [],
         "beforeShow": {},
         "advanceOn": {},
         "modal": false,
-        "buttons": [],
         "assertions": []
       },
       {
@@ -482,10 +483,10 @@
         "placement": "top",
         "title": "Choose your voice",
         "body": "This is your **voice catalog**, the `voice_voices` collection. Click any row to make it your selected voice — a check mark and the chip at the top show which one is active.",
+        "buttons": [],
         "beforeShow": {},
         "advanceOn": {},
         "modal": false,
-        "buttons": [],
         "assertions": []
       },
       {
@@ -494,10 +495,10 @@
         "placement": "left",
         "title": "Preview before you commit",
         "body": "Use **Preview** on any voice to hear a short sample without changing your selection — press it again to stop. Try a few to find the one you like.",
+        "buttons": [],
         "beforeShow": {},
         "advanceOn": {},
         "modal": false,
-        "buttons": [],
         "assertions": []
       },
       {
@@ -505,10 +506,10 @@
         "placement": "center",
         "title": "All set",
         "body": "Your voice and playback preferences are saved as you change them. Head to the **Studio** or **Dictaphone** from the menu to put your chosen voice to work.",
+        "buttons": [],
         "beforeShow": {},
         "advanceOn": {},
         "modal": false,
-        "buttons": [],
         "assertions": []
       }
     ]
@@ -526,7 +527,7 @@
     "trigger": "help-menu",
     "audience": "user",
     "isPublished": true,
-    "version": 2,
+    "version": 1,
     "tags": [
       "voice",
       "tool",
@@ -547,17 +548,18 @@
       },
       {
         "id": "open-menu",
-        "anchorKey": "sidebar-toolbar-button-left-menu",
+        "anchorKey": "sidebar-toolbar-row-left",
         "placement": "right",
-        "title": "Open your menu",
-        "body": "Navigation always starts from the **Menu** button on the left. Click it to open your menu — I'll continue the moment it's open.",
+        "title": "Open the menu",
+        "body": "Tools live in the **menu**. Click any of the highlighted buttons on the left edge to open it — I'll continue as soon as it's open.",
         "beforeShow": {},
         "showIf": {
-          "selectorExists": "[data-testid=\"sidebar-toolbar-button-left-menu\"]",
+          "selectorExists": "[data-testid=\"sidebar-toolbar-row-left\"] button",
           "selectorMissing": "[data-testid=\"sidebar-left\"].open, [data-testid=\"window-voice-settings\"]"
         },
         "advanceOn": {
-          "event": "click"
+          "event": "click",
+          "matchDescendant": "button"
         },
         "modal": false,
         "buttons": [],
@@ -568,7 +570,7 @@
         "anchorSelector": "li.appBlock:has([data-testid=\"core.sidebar.dashboard.860000000000000000010001\"]) .subgroup:first-of-type ul.subRows > li:nth-child(2) .row.leaf.sub",
         "placement": "right",
         "title": "Launch Voice Settings",
-        "body": "Under the **Voice** app's **Tools** section, click **Voice Settings**. If the Voice app is collapsed, expand it first. It opens as its own window.",
+        "body": "Under the **Voice** app's **Tools** section, click **Voice Settings**. (If the Voice app is collapsed, expand it first.) It opens as its own window.",
         "beforeShow": {
           "waitForSelector": "li.appBlock:has([data-testid=\"core.sidebar.dashboard.860000000000000000010001\"]) .subgroup:first-of-type ul.subRows > li:nth-child(2) .row.leaf.sub",
           "delayMs": 350
@@ -589,7 +591,7 @@
         "anchorSelector": "[data-testid=\"window-voice-settings\"] voice-settings .vsHeader",
         "placement": "bottom",
         "title": "Here it is",
-        "body": "**Voice Settings** opened as a floating window. Drag its header to move it or close it with the **close** button when you're done — your changes save to your `user_ui_configs` profile as you make them.",
+        "body": "**Voice Settings** opened as a floating window. Drag its header to move it or close it with the **✕** when you're done — your changes are saved to your profile as you make them.",
         "beforeShow": {
           "waitForSelector": "[data-testid=\"window-voice-settings\"] voice-settings .vsHeader",
           "delayMs": 300
@@ -603,7 +605,7 @@
         "id": "playback",
         "anchorSelector": "[data-testid=\"window-voice-settings\"] voice-settings .speedField",
         "placement": "bottom",
-        "title": "Playback speed and auto-speak",
+        "title": "Playback speed & auto-speak",
         "body": "Set the **Speed** spoken messages play at, and toggle **Auto-speak** beside it to have assistant replies read aloud automatically.",
         "beforeShow": {},
         "advanceOn": {},
@@ -615,8 +617,8 @@
         "id": "voices",
         "anchorSelector": "[data-testid=\"window-voice-settings\"] voice-settings .voiceList",
         "placement": "top",
-        "title": "Pick and preview a voice",
-        "body": "Click any voice in the list — the `voice_voices` catalog — to select it, or use its **Preview** button to hear a sample first. The active voice is marked with a check and shown in the chip at the top.",
+        "title": "Pick & preview a voice",
+        "body": "Click any voice in the list to select it, or use its **Preview** button to hear a sample first. The active voice is marked with a check and shown in the chip at the top.",
         "beforeShow": {},
         "advanceOn": {},
         "modal": false,
@@ -663,10 +665,10 @@
         "placement": "center",
         "title": "Welcome to Voice Studio",
         "body": "**Voice Studio** is your hands-on bench for the Voice app — type text and hear it spoken, or speak and watch it transcribe. Let's walk to it together, then look at every control.\n\nUse **Next** to step through, or **Esc** to leave anytime.",
+        "buttons": [],
         "beforeShow": {},
         "advanceOn": {},
         "modal": false,
-        "buttons": [],
         "assertions": []
       },
       {
@@ -675,6 +677,7 @@
         "placement": "right",
         "title": "Open your menu",
         "body": "Navigation always starts from the **Menu** button on the left. Click it to open your menu — I'll continue the moment it's open.",
+        "buttons": [],
         "beforeShow": {},
         "showIf": {
           "selectorExists": "[data-testid=\"sidebar-toolbar-button-left-menu\"]",
@@ -684,7 +687,6 @@
           "event": "click"
         },
         "modal": false,
-        "buttons": [],
         "assertions": []
       },
       {
@@ -693,13 +695,13 @@
         "placement": "right",
         "title": "The Apps section",
         "body": "Your menu lists every installed application here in the **Apps** section — **Voice** among them. Opening one takes you straight to its dashboards and tools.",
+        "buttons": [],
         "beforeShow": {
           "waitForSelector": "[data-testid=\"core.sidebar.apps\"]",
           "delayMs": 200
         },
         "advanceOn": {},
         "modal": false,
-        "buttons": [],
         "assertions": []
       },
       {
@@ -708,6 +710,7 @@
         "placement": "right",
         "title": "Open the Voice app",
         "body": "Click **Voice** to open it. Opening an app drops you onto its **home dashboard** — for Voice that's the **Voice Studio** board we're about to tour. I'll continue once it loads.",
+        "buttons": [],
         "beforeShow": {
           "waitForSelector": "[data-testid=\"core.sidebar.app.voice\"]",
           "delayMs": 200
@@ -717,7 +720,6 @@
           "matchDescendant": ".labelBtn"
         },
         "modal": false,
-        "buttons": [],
         "assertions": []
       },
       {
@@ -725,13 +727,13 @@
         "placement": "center",
         "title": "You're on Voice Studio",
         "body": "This is the Voice app's home dashboard, now the **background of your desktop**. It holds a single panel — the full text-to-speech and speech-to-text workbench. Let's go through it.",
+        "buttons": [],
         "beforeShow": {
           "waitForSelector": "[data-testid=\"window-voice-studio\"]",
           "delayMs": 600
         },
         "advanceOn": {},
         "modal": false,
-        "buttons": [],
         "assertions": []
       },
       {
@@ -740,13 +742,13 @@
         "placement": "right",
         "title": "The Studio panel",
         "body": "This **Voice Studio** panel is a live bench against the Voice app's engines — the **TTS** engine that speaks text and the **STT** engine that transcribes it. It isn't a list of records; it's a workbench that drives those two engines directly.",
+        "buttons": [],
         "beforeShow": {
           "waitForSelector": "[data-testid=\"window-voice-studio\"]",
           "delayMs": 150
         },
         "advanceOn": {},
         "modal": false,
-        "buttons": [],
         "assertions": []
       },
       {
@@ -755,10 +757,10 @@
         "placement": "bottom",
         "title": "Engine health at a glance",
         "body": "These pills show whether the **TTS** (speak) and **STT** (listen) engines are online. Press **Refresh** anytime to re-check — if either reads *down*, playback or transcription won't work until it recovers.",
+        "buttons": [],
         "beforeShow": {},
         "advanceOn": {},
         "modal": false,
-        "buttons": [],
         "assertions": []
       },
       {
@@ -767,10 +769,10 @@
         "placement": "bottom",
         "title": "Type something to speak",
         "body": "Whatever you type here is what the **Speak** engine will read aloud. Try a sentence — nothing is sent until you press Play.",
+        "buttons": [],
         "beforeShow": {},
         "advanceOn": {},
         "modal": false,
-        "buttons": [],
         "assertions": []
       },
       {
@@ -779,10 +781,10 @@
         "placement": "bottom",
         "title": "Pick a voice and speed",
         "body": "Choose which **voice** reads your text, and set the **Speed** beside it, from half speed to double. The voices come from the app's cloneable voice catalog — the `voice_voices` collection.",
+        "buttons": [],
         "beforeShow": {},
         "advanceOn": {},
         "modal": false,
-        "buttons": [],
         "assertions": []
       },
       {
@@ -791,10 +793,10 @@
         "placement": "top",
         "title": "Hear it",
         "body": "**Play** synthesizes your text with the selected voice and plays it back. This same little speaker widget can be embedded anywhere in the platform to read text aloud.",
+        "buttons": [],
         "beforeShow": {},
         "advanceOn": {},
         "modal": false,
-        "buttons": [],
         "assertions": []
       },
       {
@@ -803,10 +805,10 @@
         "placement": "top",
         "title": "Speak to transcribe",
         "body": "Now the other direction: **press and hold** this mic button while you talk, then release to transcribe. Results collect below, and the **send to speak** shortcut drops a transcript straight back into the speak box.",
+        "buttons": [],
         "beforeShow": {},
         "advanceOn": {},
         "modal": false,
-        "buttons": [],
         "assertions": []
       },
       {
@@ -814,10 +816,10 @@
         "placement": "center",
         "title": "That's the Studio",
         "body": "You've seen the whole loop — **type to speak**, and **speak to transcribe**. Explore the other Voice surfaces, the **Dictaphone** and **Voice Settings**, from the menu whenever you're ready.",
+        "buttons": [],
         "beforeShow": {},
         "advanceOn": {},
         "modal": false,
-        "buttons": [],
         "assertions": []
       }
     ]
@@ -849,10 +851,10 @@
         "placement": "center",
         "title": "Voice Studio, on demand",
         "body": "**Voice Studio** isn't only a dashboard — it's a **tool** you can pop open from the menu in any app, as its own floating window. Let me show you how.\n\nUse **Next** to step through, or **Esc** to leave anytime.",
+        "buttons": [],
         "beforeShow": {},
         "advanceOn": {},
         "modal": false,
-        "buttons": [],
         "assertions": []
       },
       {
@@ -861,6 +863,7 @@
         "placement": "right",
         "title": "Open your menu",
         "body": "Navigation always starts from the **Menu** button on the left. Click it to open your menu — I'll continue the moment it's open.",
+        "buttons": [],
         "beforeShow": {},
         "showIf": {
           "selectorExists": "[data-testid=\"sidebar-toolbar-button-left-menu\"]",
@@ -870,7 +873,6 @@
           "event": "click"
         },
         "modal": false,
-        "buttons": [],
         "assertions": []
       },
       {
@@ -879,6 +881,7 @@
         "placement": "right",
         "title": "Launch Voice Studio",
         "body": "Under the **Voice** app's **Tools** section, click **Voice Studio**. If the Voice app is collapsed, expand it first. It opens as its own window.",
+        "buttons": [],
         "beforeShow": {
           "waitForSelector": "li.appBlock:has([data-testid=\"core.sidebar.dashboard.860000000000000000010001\"]) .subgroup:first-of-type ul.subRows > li:nth-child(1) .row.leaf.sub",
           "delayMs": 350
@@ -891,7 +894,6 @@
           "matchDescendant": ".labelBtn"
         },
         "modal": false,
-        "buttons": [],
         "assertions": []
       },
       {
@@ -900,13 +902,13 @@
         "placement": "bottom",
         "title": "Here it is",
         "body": "**Voice Studio** opened as a floating window. Drag its header to move it, **pin** it to a side edge to keep it handy, or close it with the **close** button when you're done — it behaves the same on any desktop.",
+        "buttons": [],
         "beforeShow": {
           "waitForSelector": "[data-testid=\"window-voice-studio\"] voice-studio .studioHeader",
           "delayMs": 300
         },
         "advanceOn": {},
         "modal": false,
-        "buttons": [],
         "assertions": []
       },
       {
@@ -915,10 +917,10 @@
         "placement": "top",
         "title": "Speak with the TTS engine",
         "body": "Type into the box above, choose a **voice** from the `voice_voices` catalog and a **speed**, then press **Play** to synthesize and hear it. Quick text-to-speech without leaving whatever you were doing.",
+        "buttons": [],
         "beforeShow": {},
         "advanceOn": {},
         "modal": false,
-        "buttons": [],
         "assertions": []
       },
       {
@@ -927,10 +929,10 @@
         "placement": "top",
         "title": "Listen with the STT engine",
         "body": "**Press and hold** the mic button to talk, release to transcribe. The transcript appears below, and the **send to speak** shortcut sends it back to the speak box — handy for round-tripping.",
+        "buttons": [],
         "beforeShow": {},
         "advanceOn": {},
         "modal": false,
-        "buttons": [],
         "assertions": []
       },
       {
@@ -938,10 +940,10 @@
         "placement": "center",
         "title": "That's the tool",
         "body": "Because it's a standalone tool, you can summon **Voice Studio** from the menu in any app and close it the moment you're finished — no dashboard required.",
+        "buttons": [],
         "beforeShow": {},
         "advanceOn": {},
         "modal": false,
-        "buttons": [],
         "assertions": []
       }
     ]
