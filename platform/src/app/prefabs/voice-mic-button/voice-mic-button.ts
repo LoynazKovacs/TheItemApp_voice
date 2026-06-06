@@ -66,9 +66,27 @@ export class VoiceMicButtonComponent implements OnDestroy {
   @Output() readonly autoSend = new EventEmitter<string>();
   @Output() readonly errorMessage = new EventEmitter<string>();
 
+  /** Number of equaliser bars. */
+  private static readonly BAR_COUNT = 7;
+
   state = signal<'idle' | 'recording' | 'transcribing'>('idle');
   lastError = signal<string | null>(null);
   lastText = signal<string | null>(null);
+
+  /** Live input-level bars (0..1 each) shown in place of the mic icon while a
+   *  stream is open. They move with detected audio, so a dead/disconnected mic
+   *  is obvious at a glance: the bars stay flat even while the user speaks. */
+  bars = signal<number[]>(new Array(VoiceMicButtonComponent.BAR_COUNT).fill(0));
+  /** Show the level meter whenever the mic is live (PTT capture or hands-free
+   *  armed), but not while we're waiting on the STT round-trip. */
+  showMeter(): boolean {
+    return this.state() === 'recording' || (this.handsFree() && this.state() !== 'transcribing');
+  }
+  /** Map a 0..1 level to a visible bar height (never fully collapses, so the
+   *  baseline row of bars is always visible). */
+  barPct(level: number): number {
+    return 14 + Math.max(0, Math.min(1, level)) * 86;
+  }
 
   /** True while hands-free listening mode is armed (the green state). */
   handsFree = signal<boolean>(false);
@@ -82,6 +100,15 @@ export class VoiceMicButtonComponent implements OnDestroy {
    *  browser we support. */
   private static readonly MIN_RECORDING_MS = 300;
 
+  /** A real recording always carries at least an EBML/RIFF header plus one
+   *  audio cluster — comfortably over 256 bytes. At or below this the capture
+   *  is empty (mic delivered no samples): a 0-byte blob, or a header-only stub.
+   *  We treat these as "no audio captured" rather than shipping them to STT and
+   *  getting back a misleading decode error. */
+  private static readonly MIN_AUDIO_BYTES = 256;
+  private static readonly NO_AUDIO_MSG =
+    'No audio captured — check that your microphone is working and not muted or in use by another app.';
+
   /* ---- Push-to-talk state ---- */
   private mediaStream: MediaStream | null = null;
   private mediaRecorder: MediaRecorder | null = null;
@@ -93,6 +120,13 @@ export class VoiceMicButtonComponent implements OnDestroy {
   private recordStartedAt = 0;
   /** Pending stop timer when the press was shorter than MIN_RECORDING_MS. */
   private stopTimer: ReturnType<typeof setTimeout> | null = null;
+
+  /* ---- Live level meter (push-to-talk) ---- */
+  private meterCtx: AudioContext | null = null;
+  private meterAnalyser: AnalyserNode | null = null;
+  private meterData: Float32Array<ArrayBuffer> | null = null;
+  private meterTimer: ReturnType<typeof setInterval> | null = null;
+  private static readonly METER_POLL_MS = 40;
 
   /* ---- Hands-free (VAD) state ---- */
   private static readonly VAD_POLL_MS = 50;
@@ -169,6 +203,8 @@ export class VoiceMicButtonComponent implements OnDestroy {
       this.mediaRecorder.start(250);
       this.recordStartedAt = performance.now();
       this.state.set('recording');
+      // Meter setup happens AFTER start() so it adds no pre-record latency.
+      this.startMeter(this.mediaStream);
       this.cdr.markForCheck();
     } catch (err) {
       this.handleError(err);
@@ -227,6 +263,17 @@ export class VoiceMicButtonComponent implements OnDestroy {
     const mimeType = this.mediaRecorder?.mimeType || 'audio/webm';
     const blob = new Blob(this.chunks, { type: mimeType });
     this.stopStream();
+    // An empty (or header-only) blob means the mic stream delivered no audio
+    // samples — muted/disabled input device, or another app holding the mic.
+    // Don't round-trip a 0-byte file just to get a misleading "could not decode"
+    // back; tell the user what's actually wrong.
+    if (blob.size <= VoiceMicButtonComponent.MIN_AUDIO_BYTES) {
+      this.lastError.set(VoiceMicButtonComponent.NO_AUDIO_MSG);
+      this.errorMessage.emit(this.lastError()!);
+      this.state.set('idle');
+      this.cdr.markForCheck();
+      return;
+    }
     this.state.set('transcribing');
     this.cdr.markForCheck();
 
@@ -253,9 +300,63 @@ export class VoiceMicButtonComponent implements OnDestroy {
   }
 
   private stopStream() {
+    this.stopMeter();
     try { this.mediaStream?.getTracks().forEach((t) => t.stop()); } catch { /* noop */ }
     this.mediaStream = null;
     this.mediaRecorder = null;
+  }
+
+  /** Tap the PTT mic stream with a Web-Audio analyser and animate the level
+   *  bars while recording. Independent of the MediaRecorder pipeline — purely
+   *  visual feedback. */
+  private startMeter(stream: MediaStream) {
+    try {
+      const Ctx: typeof AudioContext =
+        (window as any).AudioContext || (window as any).webkitAudioContext;
+      this.meterCtx = new Ctx();
+      const src = this.meterCtx.createMediaStreamSource(stream);
+      this.meterAnalyser = this.meterCtx.createAnalyser();
+      this.meterAnalyser.fftSize = 1024;
+      this.meterData = new Float32Array(new ArrayBuffer(this.meterAnalyser.fftSize * Float32Array.BYTES_PER_ELEMENT));
+      src.connect(this.meterAnalyser);
+      this.meterTimer = setInterval(() => {
+        if (!this.meterAnalyser || !this.meterData) return;
+        this.meterAnalyser.getFloatTimeDomainData(this.meterData);
+        this.bars.set(this.barsFromTimeDomain(this.meterData));
+        this.cdr.markForCheck();
+      }, VoiceMicButtonComponent.METER_POLL_MS);
+    } catch {
+      // Metering is best-effort; recording proceeds without it.
+      this.stopMeter();
+    }
+  }
+
+  private stopMeter() {
+    if (this.meterTimer) { clearInterval(this.meterTimer); this.meterTimer = null; }
+    try { void this.meterCtx?.close(); } catch { /* noop */ }
+    this.meterCtx = null;
+    this.meterAnalyser = null;
+    this.meterData = null;
+    this.bars.set(new Array(VoiceMicButtonComponent.BAR_COUNT).fill(0));
+  }
+
+  /** Split a time-domain frame into BAR_COUNT chunks and take each chunk's RMS,
+   *  producing an equaliser-style level array (0..1 per bar). Shared by the PTT
+   *  meter and the hands-free VAD. */
+  private barsFromTimeDomain(data: Float32Array): number[] {
+    const n = VoiceMicButtonComponent.BAR_COUNT;
+    const chunk = Math.max(1, Math.floor(data.length / n));
+    const out: number[] = new Array(n);
+    for (let b = 0; b < n; b++) {
+      let sum = 0;
+      const start = b * chunk;
+      const end = Math.min(data.length, start + chunk);
+      for (let i = start; i < end; i++) sum += data[i] * data[i];
+      const rms = Math.sqrt(sum / Math.max(1, end - start));
+      // Gain so normal speech fills the bars; clamp to 1.
+      out[b] = Math.min(1, rms * 6);
+    }
+    return out;
   }
 
   /* ================================================================== */
@@ -326,6 +427,10 @@ export class VoiceMicButtonComponent implements OnDestroy {
     }
     const rms = Math.sqrt(sum / this.vadData.length);
     const now = performance.now();
+
+    // Drive the visual level bars from the same frame the VAD analyses.
+    this.bars.set(this.barsFromTimeDomain(this.vadData));
+    this.cdr.markForCheck();
 
     const dynThreshold = Math.max(
       this.vadThreshold(),
@@ -432,6 +537,14 @@ export class VoiceMicButtonComponent implements OnDestroy {
     this.hfChunks = [];
     // Disarmed mid-flight — drop the result, the stream is already gone.
     if (!this.handsFree()) return;
+    // Empty capture (dead/muted mic) — surface it but stay armed.
+    if (blob.size <= VoiceMicButtonComponent.MIN_AUDIO_BYTES) {
+      this.lastError.set(VoiceMicButtonComponent.NO_AUDIO_MSG);
+      this.errorMessage.emit(this.lastError()!);
+      if (this.handsFree()) this.state.set('idle');
+      this.cdr.markForCheck();
+      return;
+    }
 
     this.state.set('transcribing');
     this.cdr.markForCheck();
@@ -485,6 +598,7 @@ export class VoiceMicButtonComponent implements OnDestroy {
     this.vadData = null;
     try { this.hfStream?.getTracks().forEach((t) => t.stop()); } catch { /* noop */ }
     this.hfStream = null;
+    this.bars.set(new Array(VoiceMicButtonComponent.BAR_COUNT).fill(0));
   }
 
   /* ---- Shared helpers ---- */

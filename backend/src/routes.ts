@@ -175,6 +175,18 @@ export function registerRoutes(app: FastifyInstance, deps: RouteDeps): void {
       return reply.code(400).send({ error: 'Missing audio file' });
     }
 
+    // An empty / header-only payload means the browser's mic delivered no audio
+    // samples (muted or disabled input device, or another app holding the mic).
+    // That's a capture failure, not a decode failure — report it honestly so the
+    // user checks their microphone instead of chasing an "unsupported format".
+    if (fileBuffer.length <= 256) {
+      request.log.warn({ bytes: fileBuffer.length, fileMime }, 'STT received empty audio capture');
+      return reply.code(400).send({
+        ok: false,
+        error: 'No audio was captured — check that your microphone is working and not muted or in use by another app, then try again.',
+      });
+    }
+
     // Normalize through ffmpeg → 24 kHz mono PCM WAV before forwarding to
     // omnivoice. The browser's MediaRecorder occasionally produces truncated
     // webm payloads (EBML header but no audio cluster) when the user releases
