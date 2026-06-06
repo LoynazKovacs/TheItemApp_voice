@@ -1,0 +1,450 @@
+[
+  {
+    "_id": {
+      "$oid": "6a246f28644b16df299c8fc3"
+    },
+    "modelId": {
+      "$oid": "860000000000000000030001"
+    },
+    "appId": {
+      "$oid": "860000000000000000000001"
+    },
+    "name": "Voices · language × engine",
+    "data": {
+      "kind": "aggregate",
+      "aggregation": {
+        "rows": [
+          "language"
+        ],
+        "columns": [
+          "engine"
+        ],
+        "values": [
+          {
+            "op": "count",
+            "field": "_id",
+            "as": "count"
+          }
+        ]
+      }
+    },
+    "builder": {
+      "version": 1,
+      "data": {
+        "kind": "aggregate",
+        "query": [],
+        "sort": "",
+        "limit": 200,
+        "aggregation": {
+          "rows": [
+            "language"
+          ],
+          "columns": [
+            "engine"
+          ],
+          "values": [
+            {
+              "op": "count",
+              "field": "_id",
+              "as": "count"
+            }
+          ]
+        }
+      },
+      "mapping": {
+        "datasetFields": [],
+        "dropNulls": true
+      },
+      "chart": {
+        "type": "bar",
+        "xKey": "",
+        "yKeys": [],
+        "pieNameKey": "",
+        "pieValueKey": "",
+        "showLegend": true,
+        "showTooltip": true,
+        "stack": true,
+        "smooth": false,
+        "rotateXLabels": false,
+        "enableZoom": false
+      },
+      "formatting": {},
+      "formatters": {},
+      "advanced": {
+        "optionOverrides": {}
+      }
+    },
+    "isDefault": false,
+    "order": 10
+  },
+  {
+    "_id": {
+      "$oid": "6a246f2c644b16df299c91b8"
+    },
+    "modelId": {
+      "$oid": "860000000000000000030001"
+    },
+    "appId": {
+      "$oid": "860000000000000000000001"
+    },
+    "name": "Voices by gender",
+    "data": {
+      "kind": "aggregate",
+      "aggregation": {
+        "rows": [
+          "gender"
+        ],
+        "columns": [],
+        "values": [
+          {
+            "op": "count",
+            "field": "_id",
+            "as": "count"
+          }
+        ]
+      }
+    },
+    "builder": {
+      "version": 1,
+      "data": {
+        "kind": "aggregate",
+        "query": [],
+        "sort": "",
+        "limit": 200,
+        "aggregation": {
+          "rows": [
+            "gender"
+          ],
+          "columns": [],
+          "values": [
+            {
+              "op": "count",
+              "field": "_id",
+              "as": "count"
+            }
+          ]
+        }
+      },
+      "mapping": {
+        "datasetFields": [],
+        "dropNulls": true
+      },
+      "chart": {
+        "type": "pie",
+        "xKey": "",
+        "yKeys": [],
+        "pieNameKey": "",
+        "pieValueKey": "",
+        "showLegend": true,
+        "showTooltip": true,
+        "stack": false,
+        "smooth": false,
+        "rotateXLabels": false,
+        "enableZoom": false
+      },
+      "formatting": {},
+      "formatters": {},
+      "advanced": {
+        "optionOverrides": {}
+      }
+    },
+    "isDefault": false,
+    "order": 20
+  },
+  {
+    "_id": {
+      "$oid": "6a246f2f644b16df299c91e1"
+    },
+    "modelId": {
+      "$oid": "860000000000000000030001"
+    },
+    "appId": {
+      "$oid": "860000000000000000000001"
+    },
+    "name": "Voices by engine",
+    "data": {
+      "kind": "aggregate",
+      "aggregation": {
+        "rows": [
+          "engine"
+        ],
+        "columns": [],
+        "values": [
+          {
+            "op": "count",
+            "field": "_id",
+            "as": "count"
+          }
+        ]
+      }
+    },
+    "builder": {
+      "version": 1,
+      "data": {
+        "kind": "aggregate",
+        "query": [],
+        "sort": "",
+        "limit": 200,
+        "aggregation": {
+          "rows": [
+            "engine"
+          ],
+          "columns": [],
+          "values": [
+            {
+              "op": "count",
+              "field": "_id",
+              "as": "count"
+            }
+          ]
+        }
+      },
+      "mapping": {
+        "datasetFields": [],
+        "dropNulls": true
+      },
+      "chart": {
+        "type": "pie",
+        "xKey": "",
+        "yKeys": [],
+        "pieNameKey": "",
+        "pieValueKey": "",
+        "showLegend": true,
+        "showTooltip": true,
+        "stack": false,
+        "smooth": false,
+        "rotateXLabels": false,
+        "enableZoom": false
+      },
+      "formatting": {},
+      "formatters": {},
+      "advanced": {
+        "optionOverrides": {}
+      }
+    },
+    "isDefault": false,
+    "order": 30
+  },
+  {
+    "_id": {
+      "$oid": "6a246f31644b16df299c965c"
+    },
+    "modelId": {
+      "$oid": "860000000000000000030002"
+    },
+    "appId": {
+      "$oid": "860000000000000000000001"
+    },
+    "name": "Audio duration by language",
+    "data": {
+      "kind": "aggregate",
+      "aggregation": {
+        "rows": [
+          "language"
+        ],
+        "columns": [],
+        "values": [
+          {
+            "op": "sum",
+            "field": "durationMs",
+            "as": "totalMs"
+          }
+        ]
+      }
+    },
+    "builder": {
+      "version": 1,
+      "data": {
+        "kind": "aggregate",
+        "query": [],
+        "sort": "",
+        "limit": 200,
+        "aggregation": {
+          "rows": [
+            "language"
+          ],
+          "columns": [],
+          "values": [
+            {
+              "op": "sum",
+              "field": "durationMs",
+              "as": "totalMs"
+            }
+          ]
+        }
+      },
+      "mapping": {
+        "datasetFields": [],
+        "dropNulls": true
+      },
+      "chart": {
+        "type": "bar",
+        "xKey": "",
+        "yKeys": [],
+        "pieNameKey": "",
+        "pieValueKey": "",
+        "showLegend": false,
+        "showTooltip": true,
+        "stack": false,
+        "smooth": false,
+        "rotateXLabels": false,
+        "enableZoom": false
+      },
+      "formatting": {},
+      "formatters": {},
+      "advanced": {
+        "optionOverrides": {}
+      }
+    },
+    "isDefault": false,
+    "order": 10
+  },
+  {
+    "_id": {
+      "$oid": "6a246f35644b16df299c9674"
+    },
+    "modelId": {
+      "$oid": "860000000000000000030002"
+    },
+    "appId": {
+      "$oid": "860000000000000000000001"
+    },
+    "name": "Notes by language",
+    "data": {
+      "kind": "aggregate",
+      "aggregation": {
+        "rows": [
+          "language"
+        ],
+        "columns": [],
+        "values": [
+          {
+            "op": "count",
+            "field": "_id",
+            "as": "count"
+          }
+        ]
+      }
+    },
+    "builder": {
+      "version": 1,
+      "data": {
+        "kind": "aggregate",
+        "query": [],
+        "sort": "",
+        "limit": 200,
+        "aggregation": {
+          "rows": [
+            "language"
+          ],
+          "columns": [],
+          "values": [
+            {
+              "op": "count",
+              "field": "_id",
+              "as": "count"
+            }
+          ]
+        }
+      },
+      "mapping": {
+        "datasetFields": [],
+        "dropNulls": true
+      },
+      "chart": {
+        "type": "pie",
+        "xKey": "",
+        "yKeys": [],
+        "pieNameKey": "",
+        "pieValueKey": "",
+        "showLegend": true,
+        "showTooltip": true,
+        "stack": false,
+        "smooth": false,
+        "rotateXLabels": false,
+        "enableZoom": false
+      },
+      "formatting": {},
+      "formatters": {},
+      "advanced": {
+        "optionOverrides": {}
+      }
+    },
+    "isDefault": false,
+    "order": 20
+  },
+  {
+    "_id": {
+      "$oid": "6a246f38644b16df299c968c"
+    },
+    "modelId": {
+      "$oid": "860000000000000000030002"
+    },
+    "appId": {
+      "$oid": "860000000000000000000001"
+    },
+    "name": "Notes by format",
+    "data": {
+      "kind": "aggregate",
+      "aggregation": {
+        "rows": [
+          "mimeType"
+        ],
+        "columns": [],
+        "values": [
+          {
+            "op": "count",
+            "field": "_id",
+            "as": "count"
+          }
+        ]
+      }
+    },
+    "builder": {
+      "version": 1,
+      "data": {
+        "kind": "aggregate",
+        "query": [],
+        "sort": "",
+        "limit": 200,
+        "aggregation": {
+          "rows": [
+            "mimeType"
+          ],
+          "columns": [],
+          "values": [
+            {
+              "op": "count",
+              "field": "_id",
+              "as": "count"
+            }
+          ]
+        }
+      },
+      "mapping": {
+        "datasetFields": [],
+        "dropNulls": true
+      },
+      "chart": {
+        "type": "pie",
+        "xKey": "",
+        "yKeys": [],
+        "pieNameKey": "",
+        "pieValueKey": "",
+        "showLegend": true,
+        "showTooltip": true,
+        "stack": false,
+        "smooth": false,
+        "rotateXLabels": false,
+        "enableZoom": false
+      },
+      "formatting": {},
+      "formatters": {},
+      "advanced": {
+        "optionOverrides": {}
+      }
+    },
+    "isDefault": false,
+    "order": 30
+  }
+]

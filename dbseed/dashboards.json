@@ -1,6 +1,150 @@
 [
   {
     "_id": {
+      "$oid": "6a246f8a644b16df299cc165"
+    },
+    "appId": {
+      "$oid": "860000000000000000000001"
+    },
+    "name": "Overview",
+    "icon": "lucide:layout-dashboard",
+    "isHome": true,
+    "statusId": {
+      "$oid": "700000000000000000140001"
+    },
+    "groupIds": [
+      {
+        "$oid": "7000000000000000001d0001"
+      },
+      {
+        "$oid": "7000000000000000001d0002"
+      }
+    ],
+    "gridsterConfigId": {
+      "$oid": "700000000000000000050003"
+    },
+    "tiles": [
+      {
+        "windowId": {
+          "$oid": "6a246f61644b16df299cac89"
+        },
+        "x": 0,
+        "y": 0,
+        "cols": 18,
+        "rows": 4
+      },
+      {
+        "windowId": {
+          "$oid": "6a246f62644b16df299cae0e"
+        },
+        "x": 18,
+        "y": 0,
+        "cols": 6,
+        "rows": 4
+      },
+      {
+        "windowId": {
+          "$oid": "6a246f64644b16df299cae25"
+        },
+        "x": 0,
+        "y": 4,
+        "cols": 8,
+        "rows": 9
+      },
+      {
+        "windowId": {
+          "$oid": "6a246f67644b16df299cae2f"
+        },
+        "x": 8,
+        "y": 4,
+        "cols": 16,
+        "rows": 9
+      },
+      {
+        "windowId": {
+          "$oid": "6a246f69644b16df299cae47"
+        },
+        "x": 0,
+        "y": 13,
+        "cols": 6,
+        "rows": 8
+      },
+      {
+        "windowId": {
+          "$oid": "6a246f6b644b16df299cb0d6"
+        },
+        "x": 6,
+        "y": 13,
+        "cols": 6,
+        "rows": 8
+      },
+      {
+        "windowId": {
+          "$oid": "6a246f6d644b16df299cb2dd"
+        },
+        "x": 12,
+        "y": 13,
+        "cols": 12,
+        "rows": 8
+      },
+      {
+        "windowId": {
+          "$oid": "860000000000000000020001"
+        },
+        "x": 0,
+        "y": 21,
+        "cols": 24,
+        "rows": 6
+      },
+      {
+        "windowId": {
+          "$oid": "6a246f6d644b16df299cb2e6"
+        },
+        "x": 0,
+        "y": 27,
+        "cols": 8,
+        "rows": 9
+      },
+      {
+        "windowId": {
+          "$oid": "6a246f6f644b16df299cb2f1"
+        },
+        "x": 8,
+        "y": 27,
+        "cols": 16,
+        "rows": 9
+      },
+      {
+        "windowId": {
+          "$oid": "6a246f71644b16df299cb308"
+        },
+        "x": 0,
+        "y": 36,
+        "cols": 6,
+        "rows": 8
+      },
+      {
+        "windowId": {
+          "$oid": "6a246f73644b16df299cb787"
+        },
+        "x": 6,
+        "y": 36,
+        "cols": 6,
+        "rows": 8
+      },
+      {
+        "windowId": {
+          "$oid": "6a246f75644b16df299cb7a1"
+        },
+        "x": 12,
+        "y": 36,
+        "cols": 12,
+        "rows": 8
+      }
+    ]
+  },
+  {
+    "_id": {
       "$oid": "860000000000000000010001"
     },
     "appId": {
@@ -8,7 +152,7 @@
     },
     "name": "Voice Studio",
     "icon": "lucide:mic",
-    "isHome": true,
+    "isHome": false,
     "statusId": {
       "$oid": "700000000000000000140001"
     },

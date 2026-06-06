@@ -1,0 +1,80 @@
+[
+  {
+    "_id": {
+      "$oid": "6a246f1a644b16df299c885b"
+    },
+    "modelId": {
+      "$oid": "860000000000000000030001"
+    },
+    "appId": {
+      "$oid": "860000000000000000000001"
+    },
+    "name": "Voice Catalog",
+    "groupBy": [],
+    "sortFields": [
+      {
+        "field": "order",
+        "dir": "asc"
+      }
+    ],
+    "rowDensity": "comfortable",
+    "showAvatar": true,
+    "avatarField": "",
+    "avatarShape": "circle",
+    "showBadge": true,
+    "badgeField": "enabled",
+    "showTitle": true,
+    "titleField": "displayName",
+    "titleWeight": "bold",
+    "showSubtitle": true,
+    "subtitleField": "description",
+    "subtitleLines": 2,
+    "showRightTop": true,
+    "rightTopField": "language",
+    "showRightMiddle": true,
+    "rightMiddleField": "engine",
+    "rightMiddleKind": "badge",
+    "showRightBottom": true,
+    "rightBottomField": "gender",
+    "rightBottomKind": "badge",
+    "isDefault": true
+  },
+  {
+    "_id": {
+      "$oid": "6a246f1c644b16df299c8875"
+    },
+    "modelId": {
+      "$oid": "860000000000000000030002"
+    },
+    "appId": {
+      "$oid": "860000000000000000000001"
+    },
+    "name": "Voice Notes",
+    "groupBy": [],
+    "sortFields": [
+      {
+        "field": "durationMs",
+        "dir": "desc"
+      }
+    ],
+    "rowDensity": "comfortable",
+    "showAvatar": true,
+    "avatarField": "",
+    "avatarShape": "circle",
+    "showTitle": true,
+    "titleField": "title",
+    "titleWeight": "bold",
+    "showSubtitle": true,
+    "subtitleField": "transcript",
+    "subtitleLines": 2,
+    "showRightTop": true,
+    "rightTopField": "language",
+    "showRightMiddle": true,
+    "rightMiddleField": "durationMs",
+    "rightMiddleKind": "badge",
+    "showRightBottom": true,
+    "rightBottomField": "mimeType",
+    "rightBottomKind": "badge",
+    "isDefault": true
+  }
+]

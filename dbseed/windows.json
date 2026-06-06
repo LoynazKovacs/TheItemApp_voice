@@ -1,6 +1,491 @@
 [
   {
     "_id": {
+      "$oid": "6a246f61644b16df299cac89"
+    },
+    "dashboardId": {
+      "$oid": "6a246f8a644b16df299cc165"
+    },
+    "title": "Voice at a glance",
+    "icon": "lucide:gauge",
+    "groupIds": [
+      {
+        "$oid": "7000000000000000001d0001"
+      },
+      {
+        "$oid": "7000000000000000001d0002"
+      }
+    ],
+    "modelId": {
+      "$oid": "860000000000000000030001"
+    },
+    "prefabId": {
+      "$oid": "700000000000000000060019"
+    },
+    "prefabConfig": {
+      "collection": "voice_voices",
+      "ui": {
+        "kpi": {
+          "columns": 4,
+          "metrics": [
+            {
+              "label": "Voices",
+              "icon": "lucide:mic-2",
+              "op": "count",
+              "collection": "voice_voices",
+              "color": "#7c3aed"
+            },
+            {
+              "label": "Voice Notes",
+              "icon": "lucide:cassette-tape",
+              "op": "count",
+              "collection": "voice_notes",
+              "color": "#2563eb"
+            },
+            {
+              "label": "Total Audio (ms)",
+              "icon": "lucide:audio-lines",
+              "op": "sum",
+              "field": "durationMs",
+              "collection": "voice_notes",
+              "color": "#0891b2"
+            },
+            {
+              "label": "Avg Note (ms)",
+              "icon": "lucide:timer",
+              "op": "avg",
+              "field": "durationMs",
+              "collection": "voice_notes",
+              "color": "#16a34a"
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6a246f62644b16df299cae0e"
+    },
+    "dashboardId": {
+      "$oid": "6a246f8a644b16df299cc165"
+    },
+    "title": "Filters",
+    "icon": "lucide:filter",
+    "groupIds": [
+      {
+        "$oid": "7000000000000000001d0001"
+      },
+      {
+        "$oid": "7000000000000000001d0002"
+      }
+    ],
+    "modelId": {
+      "$oid": "860000000000000000030001"
+    },
+    "prefabId": {
+      "$oid": "700000000000000000060015"
+    },
+    "prefabConfig": {
+      "collection": "voice_voices"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6a246f64644b16df299cae25"
+    },
+    "dashboardId": {
+      "$oid": "6a246f8a644b16df299cc165"
+    },
+    "title": "Voice Catalog",
+    "icon": "lucide:mic-2",
+    "groupIds": [
+      {
+        "$oid": "7000000000000000001d0001"
+      },
+      {
+        "$oid": "7000000000000000001d0002"
+      }
+    ],
+    "modelId": {
+      "$oid": "860000000000000000030001"
+    },
+    "prefabId": {
+      "$oid": "70000000000000000006000b"
+    },
+    "prefabConfig": {
+      "collection": "voice_voices",
+      "query": {},
+      "sort": "",
+      "groupBy": [],
+      "ui": {
+        "tree": {
+          "viewId": {
+            "$oid": "6a246f1a644b16df299c885b"
+          }
+        }
+      }
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6a246f67644b16df299cae2f"
+    },
+    "dashboardId": {
+      "$oid": "6a246f8a644b16df299cc165"
+    },
+    "title": "Voices · language × engine",
+    "icon": "lucide:bar-chart-3",
+    "groupIds": [
+      {
+        "$oid": "7000000000000000001d0001"
+      },
+      {
+        "$oid": "7000000000000000001d0002"
+      }
+    ],
+    "modelId": {
+      "$oid": "860000000000000000030001"
+    },
+    "prefabId": {
+      "$oid": "700000000000000000060008"
+    },
+    "prefabConfig": {
+      "collection": "voice_voices",
+      "query": {},
+      "ui": {
+        "chart": {
+          "viewId": {
+            "$oid": "6a246f28644b16df299c8fc3"
+          }
+        },
+        "filterBar": {
+          "showActiveFiltersTop": false
+        }
+      }
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6a246f69644b16df299cae47"
+    },
+    "dashboardId": {
+      "$oid": "6a246f8a644b16df299cc165"
+    },
+    "title": "Voices by gender",
+    "icon": "lucide:pie-chart",
+    "groupIds": [
+      {
+        "$oid": "7000000000000000001d0001"
+      },
+      {
+        "$oid": "7000000000000000001d0002"
+      }
+    ],
+    "modelId": {
+      "$oid": "860000000000000000030001"
+    },
+    "prefabId": {
+      "$oid": "700000000000000000060008"
+    },
+    "prefabConfig": {
+      "collection": "voice_voices",
+      "query": {},
+      "ui": {
+        "chart": {
+          "viewId": {
+            "$oid": "6a246f2c644b16df299c91b8"
+          }
+        },
+        "filterBar": {
+          "showActiveFiltersTop": false
+        }
+      }
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6a246f6b644b16df299cb0d6"
+    },
+    "dashboardId": {
+      "$oid": "6a246f8a644b16df299cc165"
+    },
+    "title": "Voices by engine",
+    "icon": "lucide:pie-chart",
+    "groupIds": [
+      {
+        "$oid": "7000000000000000001d0001"
+      },
+      {
+        "$oid": "7000000000000000001d0002"
+      }
+    ],
+    "modelId": {
+      "$oid": "860000000000000000030001"
+    },
+    "prefabId": {
+      "$oid": "700000000000000000060008"
+    },
+    "prefabConfig": {
+      "collection": "voice_voices",
+      "query": {},
+      "ui": {
+        "chart": {
+          "viewId": {
+            "$oid": "6a246f2f644b16df299c91e1"
+          }
+        },
+        "filterBar": {
+          "showActiveFiltersTop": false
+        }
+      }
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6a246f6d644b16df299cb2dd"
+    },
+    "dashboardId": {
+      "$oid": "6a246f8a644b16df299cc165"
+    },
+    "title": "Voices · language × gender",
+    "icon": "lucide:table-2",
+    "groupIds": [
+      {
+        "$oid": "7000000000000000001d0001"
+      },
+      {
+        "$oid": "7000000000000000001d0002"
+      }
+    ],
+    "modelId": {
+      "$oid": "860000000000000000030001"
+    },
+    "prefabId": {
+      "$oid": "700000000000000000060007"
+    },
+    "prefabConfig": {
+      "collection": "voice_voices",
+      "query": {},
+      "aggregation": {
+        "rows": [
+          "language"
+        ],
+        "columns": [
+          "gender"
+        ],
+        "values": [
+          {
+            "op": "count",
+            "field": "_id",
+            "as": "count"
+          }
+        ]
+      },
+      "ui": {
+        "showGrandTotals": true
+      }
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6a246f6d644b16df299cb2e6"
+    },
+    "dashboardId": {
+      "$oid": "6a246f8a644b16df299cc165"
+    },
+    "title": "Voice Notes",
+    "icon": "lucide:cassette-tape",
+    "groupIds": [
+      {
+        "$oid": "7000000000000000001d0001"
+      },
+      {
+        "$oid": "7000000000000000001d0002"
+      }
+    ],
+    "modelId": {
+      "$oid": "860000000000000000030002"
+    },
+    "prefabId": {
+      "$oid": "70000000000000000006000b"
+    },
+    "prefabConfig": {
+      "collection": "voice_notes",
+      "query": {},
+      "sort": "",
+      "groupBy": [],
+      "ui": {
+        "tree": {
+          "viewId": {
+            "$oid": "6a246f1c644b16df299c8875"
+          }
+        }
+      }
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6a246f6f644b16df299cb2f1"
+    },
+    "dashboardId": {
+      "$oid": "6a246f8a644b16df299cc165"
+    },
+    "title": "Audio duration by language",
+    "icon": "lucide:audio-lines",
+    "groupIds": [
+      {
+        "$oid": "7000000000000000001d0001"
+      },
+      {
+        "$oid": "7000000000000000001d0002"
+      }
+    ],
+    "modelId": {
+      "$oid": "860000000000000000030002"
+    },
+    "prefabId": {
+      "$oid": "700000000000000000060008"
+    },
+    "prefabConfig": {
+      "collection": "voice_notes",
+      "query": {},
+      "ui": {
+        "chart": {
+          "viewId": {
+            "$oid": "6a246f31644b16df299c965c"
+          }
+        },
+        "filterBar": {
+          "showActiveFiltersTop": false
+        }
+      }
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6a246f71644b16df299cb308"
+    },
+    "dashboardId": {
+      "$oid": "6a246f8a644b16df299cc165"
+    },
+    "title": "Notes by language",
+    "icon": "lucide:pie-chart",
+    "groupIds": [
+      {
+        "$oid": "7000000000000000001d0001"
+      },
+      {
+        "$oid": "7000000000000000001d0002"
+      }
+    ],
+    "modelId": {
+      "$oid": "860000000000000000030002"
+    },
+    "prefabId": {
+      "$oid": "700000000000000000060008"
+    },
+    "prefabConfig": {
+      "collection": "voice_notes",
+      "query": {},
+      "ui": {
+        "chart": {
+          "viewId": {
+            "$oid": "6a246f35644b16df299c9674"
+          }
+        },
+        "filterBar": {
+          "showActiveFiltersTop": false
+        }
+      }
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6a246f73644b16df299cb787"
+    },
+    "dashboardId": {
+      "$oid": "6a246f8a644b16df299cc165"
+    },
+    "title": "Notes by format",
+    "icon": "lucide:pie-chart",
+    "groupIds": [
+      {
+        "$oid": "7000000000000000001d0001"
+      },
+      {
+        "$oid": "7000000000000000001d0002"
+      }
+    ],
+    "modelId": {
+      "$oid": "860000000000000000030002"
+    },
+    "prefabId": {
+      "$oid": "700000000000000000060008"
+    },
+    "prefabConfig": {
+      "collection": "voice_notes",
+      "query": {},
+      "ui": {
+        "chart": {
+          "viewId": {
+            "$oid": "6a246f38644b16df299c968c"
+          }
+        },
+        "filterBar": {
+          "showActiveFiltersTop": false
+        }
+      }
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6a246f75644b16df299cb7a1"
+    },
+    "dashboardId": {
+      "$oid": "6a246f8a644b16df299cc165"
+    },
+    "title": "Notes · language × format",
+    "icon": "lucide:table-2",
+    "groupIds": [
+      {
+        "$oid": "7000000000000000001d0001"
+      },
+      {
+        "$oid": "7000000000000000001d0002"
+      }
+    ],
+    "modelId": {
+      "$oid": "860000000000000000030002"
+    },
+    "prefabId": {
+      "$oid": "700000000000000000060007"
+    },
+    "prefabConfig": {
+      "collection": "voice_notes",
+      "query": {},
+      "aggregation": {
+        "rows": [
+          "language"
+        ],
+        "columns": [
+          "mimeType"
+        ],
+        "values": [
+          {
+            "op": "count",
+            "field": "_id",
+            "as": "count"
+          }
+        ]
+      },
+      "ui": {
+        "showGrandTotals": true
+      }
+    }
+  },
+  {
+    "_id": {
       "$oid": "860000000000000000020001"
     },
     "dashboardId": {
