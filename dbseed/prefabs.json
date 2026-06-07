@@ -93,6 +93,29 @@
   },
   {
     "_id": {
+      "$oid": "860000000000000000060006"
+    },
+    "key": "voiceEngine",
+    "title": "Voice Engine",
+    "description": "Monitor and control the OmniVoice compute device: view effective device (GPU/CPU), VRAM and load state, switch CPU<->GPU live, and load/unload models to free VRAM. Mutations are admin-only.",
+    "icon": "lucide:cpu",
+    "type": "voiceEngine",
+    "displayType": "standalone",
+    "reserved": true,
+    "frontend": {
+      "loader": "nativeFederation",
+      "remoteName": "voice",
+      "remoteEntry": "/mf/voice/remoteEntry.json",
+      "exposedModule": "./VoiceEnginePrefab",
+      "exportName": "VoiceEngineComponent"
+    },
+    "defaultTile": {
+      "cols": 2,
+      "rows": 3
+    }
+  },
+  {
+    "_id": {
       "$oid": "860000000000000000060001"
     },
     "key": "voiceStudio",

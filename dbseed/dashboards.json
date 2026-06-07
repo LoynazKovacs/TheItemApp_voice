@@ -323,5 +323,57 @@
         }
       }
     ]
+  },
+  {
+    "_id": {
+      "$oid": "860000000000000000010004"
+    },
+    "appId": {
+      "$oid": "860000000000000000000001"
+    },
+    "name": "Voice Engine",
+    "icon": "lucide:cpu",
+    "isHome": false,
+    "statusId": {
+      "$oid": "700000000000000000140001"
+    },
+    "groupIds": [
+      {
+        "$oid": "7000000000000000001d0001"
+      },
+      {
+        "$oid": "7000000000000000001d0002"
+      }
+    ],
+    "gridsterConfigId": {
+      "$oid": "700000000000000000050004"
+    },
+    "tiles": [
+      {
+        "windowId": {
+          "$oid": "860000000000000000020010"
+        },
+        "x": 0,
+        "y": 0,
+        "cols": 2,
+        "rows": 3,
+        "slot": {
+          "key": "",
+          "title": "",
+          "collapsedByDefault": false,
+          "autoShowOnIntent": true,
+          "icon": "",
+          "render": {
+            "prefabKey": "",
+            "collection": "",
+            "recordId": ""
+          },
+          "accepts": [],
+          "whenHidden": {
+            "absorbedBy": []
+          }
+        }
+      }
+    ]
   }
 ]

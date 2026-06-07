@@ -174,19 +174,46 @@ Brings up the full stack on the shared `theitemapp` Docker network. The
 
 ### GPU vs CPU
 
-OmniVoice picks its inference device purely via `torch.cuda.is_available()`, so a
-single env var in this stack's `.env` switches it without any image or compose
-edit:
+OmniVoice picks its inference device purely via `torch.cuda.is_available()`. Two
+env vars in this stack's `.env` control it (no image or compose edit needed):
 
-| `OMNIVOICE_CUDA_VISIBLE_DEVICES` | Effect |
+| Var | Effect |
 | --- | --- |
-| _empty_ | CPU-only — every TTS/ASR backend uses its CPU path; GPU VRAM is freed (~4 GB). Slower inference. |
-| `0` | Use GPU 0 (default when the var is unset). |
+| `OMNIVOICE_CUDA_VISIBLE_DEVICES` | GPU *visibility* to the container. `0` = GPU 0 visible (default). _empty_ = GPU hidden, hard CPU-only, no live toggle. |
+| `OMNIVOICE_FORCE_DEVICE` | Effective *boot* device honoured by the sysmon device lever. `cpu` (default) boots with no model weights on the GPU; `cuda` boots on GPU; `auto` = real detection. |
 
-Apply a change with `docker compose up -d omnivoice` (or redeploy the repo). The
-GPU is left reserved by the `deploy` stanza so flipping back to GPU is just this
-one variable.
+The default (`…DEVICES=0`, `…FORCE_DEVICE=cpu`) keeps the GPU available but free
+of voice model weights at boot, while letting the in-app control panel switch
+CPU↔GPU live.
 
-On a host with **no** GPU at all, also remove the
-`deploy.resources.reservations.devices` stanza from the `omnivoice` service (and
-optionally override `OMNIVOICE_IMAGE` with an upstream CPU tag when available).
+On a host with **no** GPU at all, set `OMNIVOICE_CUDA_VISIBLE_DEVICES=` (empty)
+and remove the `deploy.resources.reservations.devices` stanza from the
+`omnivoice` service.
+
+### Voice Engine control panel
+
+The **Voice Engine** dashboard (standalone `voiceEngine` prefab, also under the
+app's Tools) is a live control + monitor surface:
+
+- **Status** — effective device (GPU/CPU), TTS/STT load state, VRAM bar (GPU mode).
+- **Inference device** — switch CPU↔GPU in-process, no container restart. The
+  backend flips the single lever the whole engine keys off
+  (`torch.cuda.is_available`, wrapped in `omnivoice-init/sysmon_patch.py`) so TTS
+  *and* ASR follow consistently. The choice is persisted to
+  `OMNIVOICE_DATA_DIR/device_override` and survives restarts.
+- **Memory** — Load / Unload models on demand to warm or free VRAM.
+
+Status is readable by any signed-in user; device/load/unload mutations are
+**admin-only** (voice-api gates them via the platform Admins group). The engine
+is also monitored by the **System Manager** app (it probes `/model/loaded` +
+`/sysmon/*`), which shows the per-workload device and VRAM and can unload them.
+
+Engine endpoints (proxied by voice-api under `/voice-api/api/engine/*`, admin
+for mutations):
+
+| Method | Path | |
+| --- | --- | --- |
+| GET | `/sysmon/engine` | device, load state, VRAM |
+| POST | `/sysmon/engine/device` | `{"device":"cpu"\|"cuda"}` — unload → switch → reload |
+| POST | `/sysmon/engine/load` | preload TTS on current device |
+| POST | `/sysmon/engine/unload` | unload TTS + capture ASR, free VRAM |

@@ -1,3 +1,6 @@
+/** Platform Admins group — members may mutate the voice engine device/load. */
+const ADMIN_GROUP_ID = '7000000000000000001d0001';
+
 export class CoreApiError extends Error {
   public readonly status: number;
   public readonly method: string;
@@ -88,6 +91,28 @@ export class CoreApiClient {
         headers: this.requestHeaders(authorization, cookie),
       });
       return res.ok;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * True when the caller is a member of the platform Admins group. Used to gate
+   * engine-mutating endpoints (device switch, load/unload) — any authed user
+   * can read status, but only admins can change the engine's device or VRAM.
+   */
+  async verifyAdmin(authorization?: string, cookie?: string): Promise<boolean> {
+    try {
+      const res = await fetch(`${this.baseUrl}/api/auth/me`, {
+        method: 'GET',
+        headers: this.requestHeaders(authorization, cookie),
+      });
+      if (!res.ok) return false;
+      const me = (await res.json()) as { groupIds?: unknown };
+      const groupIds = Array.isArray(me?.groupIds)
+        ? me.groupIds.map((g) => (typeof g === 'string' ? g : (g as { _id?: string })?._id)).filter(Boolean)
+        : [];
+      return groupIds.includes(ADMIN_GROUP_ID);
     } catch {
       return false;
     }

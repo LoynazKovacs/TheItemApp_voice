@@ -177,6 +177,53 @@ export class OmniVoiceClient {
     });
   }
 
+  // ── Engine device control (backed by the sysmon_patch router) ────────────
+
+  /** Current engine device + load state. Returns the raw sysmon payload. */
+  async getEngineStatus(): Promise<Record<string, unknown>> {
+    const response = await this.fetchWithTimeout('/sysmon/engine', { method: 'GET' });
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`[OmniVoiceClient] engine status ${response.status}: ${errText.slice(0, 200)}`);
+    }
+    return (await response.json()) as Record<string, unknown>;
+  }
+
+  /** Switch the engine inference device. Returns {ok,status,body}. */
+  async setEngineDevice(device: 'cpu' | 'cuda'): Promise<{ ok: boolean; status: number; body: unknown }> {
+    const response = await this.fetchWithTimeout('/sysmon/engine/device', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ device }),
+    });
+    const body = await this.safeJsonOrText(response);
+    return { ok: response.ok, status: response.status, body };
+  }
+
+  /** Eagerly (re)load the TTS model on the current device. */
+  async engineLoad(): Promise<{ ok: boolean; status: number; body: unknown }> {
+    const response = await this.fetchWithTimeout('/sysmon/engine/load', { method: 'POST' });
+    const body = await this.safeJsonOrText(response);
+    return { ok: response.ok, status: response.status, body };
+  }
+
+  /** Unload TTS + capture ASR and free VRAM. */
+  async engineUnload(): Promise<{ ok: boolean; status: number; body: unknown }> {
+    const response = await this.fetchWithTimeout('/sysmon/engine/unload', { method: 'POST' });
+    const body = await this.safeJsonOrText(response);
+    return { ok: response.ok, status: response.status, body };
+  }
+
+  private async safeJsonOrText(response: Response): Promise<unknown> {
+    const text = await response.text();
+    if (!text.trim()) return null;
+    try {
+      return JSON.parse(text);
+    } catch {
+      return { raw: text.slice(0, 500) };
+    }
+  }
+
   async transcribe(
     buffer: Buffer,
     opts: { filename: string; mimeType: string } & TranscribeOptions,

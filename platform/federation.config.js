@@ -9,6 +9,7 @@ module.exports = withNativeFederation({
     './VoiceSpeakerPrefab': './src/app/prefabs/voice-speaker/exposed.ts',
     './VoiceSettingsPrefab': './src/app/prefabs/voice-settings/exposed.ts',
     './VoiceDictaphonePrefab': './src/app/prefabs/voice-dictaphone/exposed.ts',
+    './VoiceEnginePrefab': './src/app/prefabs/voice-engine/exposed.ts',
   },
 
   shared: {

@@ -25,6 +25,19 @@ export type SttResult = Readonly<{
   error?: string;
 }>;
 
+export type EngineStatus = Readonly<{
+  ok: boolean;
+  device?: string;
+  forced_device?: string;
+  cuda_available?: boolean;
+  tts_loaded?: boolean;
+  tts_loading?: boolean;
+  asr_loaded?: boolean;
+  vram_used_mb?: number | null;
+  vram_total_mb?: number | null;
+  error?: string;
+}>;
+
 /**
  * Service for talking to /voice-api endpoints.
  *
@@ -34,6 +47,15 @@ export type SttResult = Readonly<{
  * drop the cookie even though httpOnly:false). HttpClient is shared via Native
  * Federation `singleton: true` so the host interceptor fires for our requests.
  */
+/** Extract a human-readable message from an HttpErrorResponse / Error. */
+function errText(err: any): string {
+  return (
+    err?.error?.error ||
+    err?.error?.message ||
+    (err instanceof Error ? err.message : String(err))
+  );
+}
+
 @Injectable({ providedIn: 'root' })
 export class VoiceApiService {
   private readonly http = inject(HttpClient);
@@ -86,6 +108,42 @@ export class VoiceApiService {
         detail = err.message;
       }
       return { ok: false, error: `TTS failed: ${err?.status ?? ''} ${detail || ''}`.trim() };
+    }
+  }
+
+  // ── Engine device control ────────────────────────────────────────────────
+
+  async engineStatus(): Promise<EngineStatus> {
+    try {
+      return await firstValueFrom(this.http.get<EngineStatus>(`${this.baseUrl}/api/engine/status`));
+    } catch (err) {
+      return { ok: false, error: errText(err) };
+    }
+  }
+
+  async setEngineDevice(device: 'cpu' | 'cuda'): Promise<EngineStatus> {
+    try {
+      return await firstValueFrom(
+        this.http.post<EngineStatus>(`${this.baseUrl}/api/engine/device`, { device }),
+      );
+    } catch (err) {
+      return { ok: false, error: errText(err) };
+    }
+  }
+
+  async engineLoad(): Promise<EngineStatus> {
+    try {
+      return await firstValueFrom(this.http.post<EngineStatus>(`${this.baseUrl}/api/engine/load`, {}));
+    } catch (err) {
+      return { ok: false, error: errText(err) };
+    }
+  }
+
+  async engineUnload(): Promise<EngineStatus> {
+    try {
+      return await firstValueFrom(this.http.post<EngineStatus>(`${this.baseUrl}/api/engine/unload`, {}));
+    } catch (err) {
+      return { ok: false, error: errText(err) };
     }
   }
 

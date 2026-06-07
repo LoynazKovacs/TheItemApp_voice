@@ -33,8 +33,78 @@ function createAuthPreHandler(coreApi: CoreApiClient) {
   };
 }
 
+function createAdminPreHandler(coreApi: CoreApiClient) {
+  return async (request: FastifyRequest, reply: FastifyReply) => {
+    const authorization = authorizationHeader(request.headers.authorization);
+    const cookie = cookieHeader(request.headers.cookie);
+    if (!authorization && !cookie) {
+      return reply.code(401).send({ error: 'Authentication required' });
+    }
+    const isAdmin = await coreApi.verifyAdmin(authorization, cookie);
+    if (!isAdmin) {
+      return reply.code(403).send({ error: 'Admin access required' });
+    }
+  };
+}
+
 export function registerRoutes(app: FastifyInstance, deps: RouteDeps): void {
   const requireAuth = createAuthPreHandler(deps.coreApi);
+  const requireAdmin = createAdminPreHandler(deps.coreApi);
+
+  // ---------------------------------------------------------------------------
+  // Voice engine device control (proxies the omnivoice sysmon router).
+  // Status is readable by any authed user; mutations are admin-only.
+  // ---------------------------------------------------------------------------
+  app.get('/api/engine/status', { preHandler: requireAuth }, async (_request, reply) => {
+    try {
+      const status = await deps.omnivoiceClient.getEngineStatus();
+      return reply.send({ ok: true, ...status });
+    } catch (error) {
+      _request.log.warn({ error }, 'engine status failed');
+      return reply.code(502).send({ ok: false, error: 'Engine unreachable' });
+    }
+  });
+
+  app.post('/api/engine/device', { preHandler: requireAdmin }, async (request, reply) => {
+    const body = (request.body || {}) as { device?: unknown };
+    const device = body.device === 'cpu' || body.device === 'cuda' ? body.device : null;
+    if (!device) {
+      return reply.code(400).send({ ok: false, error: "device must be 'cpu' or 'cuda'" });
+    }
+    try {
+      const res = await deps.omnivoiceClient.setEngineDevice(device);
+      return reply.code(res.ok ? 200 : res.status).send(
+        res.ok ? { ok: true, ...(res.body as object) } : { ok: false, ...(res.body as object) },
+      );
+    } catch (error) {
+      request.log.error({ error }, 'engine device switch failed');
+      return reply.code(502).send({ ok: false, error: 'Engine unreachable' });
+    }
+  });
+
+  app.post('/api/engine/load', { preHandler: requireAdmin }, async (request, reply) => {
+    try {
+      const res = await deps.omnivoiceClient.engineLoad();
+      return reply.code(res.ok ? 200 : res.status).send(
+        res.ok ? { ok: true, ...(res.body as object) } : { ok: false, ...(res.body as object) },
+      );
+    } catch (error) {
+      request.log.error({ error }, 'engine load failed');
+      return reply.code(502).send({ ok: false, error: 'Engine unreachable' });
+    }
+  });
+
+  app.post('/api/engine/unload', { preHandler: requireAdmin }, async (request, reply) => {
+    try {
+      const res = await deps.omnivoiceClient.engineUnload();
+      return reply.code(res.ok ? 200 : res.status).send(
+        res.ok ? { ok: true, ...(res.body as object) } : { ok: false, ...(res.body as object) },
+      );
+    } catch (error) {
+      request.log.error({ error }, 'engine unload failed');
+      return reply.code(502).send({ ok: false, error: 'Engine unreachable' });
+    }
+  });
 
   // Local, non-cloning TTS engine. Voices whose `profileId` is `piper:<model>`
   // are synthesised here instead of being forwarded to OmniVoice.

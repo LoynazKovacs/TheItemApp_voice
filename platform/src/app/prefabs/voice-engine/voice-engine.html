@@ -1,0 +1,90 @@
+<div class="ve">
+  <div class="veHeader">
+    <h2>Voice Engine</h2>
+    <p class="hint">Monitor and control the OmniVoice compute device. Switching device or unloading frees / moves GPU memory without restarting the app.</p>
+  </div>
+
+  @if (loadingStatus() && !status()) {
+    <div class="vePanel"><span class="muted">Loading engine status…</span></div>
+  } @else if (status() && status()?.ok === false) {
+    <div class="vePanel error">Engine unreachable: {{ status()?.error }}</div>
+  } @else {
+    <!-- Status -->
+    <div class="vePanel">
+      <div class="panelHeader">
+        <h3>Status</h3>
+        <span class="deviceChip" [class.gpu]="isGpu()" [class.cpu]="!isGpu()">
+          {{ isGpu() ? 'GPU' : 'CPU' }} · {{ device() }}
+        </span>
+      </div>
+
+      <div class="statRow">
+        <span class="statLabel">TTS model</span>
+        <span class="statVal">
+          @if (ttsLoading()) { <span class="badge loading">loading…</span> }
+          @else if (ttsLoaded()) { <span class="badge on">loaded</span> }
+          @else { <span class="badge off">unloaded</span> }
+        </span>
+      </div>
+
+      <div class="statRow">
+        <span class="statLabel">STT (dictation)</span>
+        <span class="statVal">
+          @if (asrLoaded()) { <span class="badge on">loaded</span> }
+          @else { <span class="badge off">idle</span> }
+        </span>
+      </div>
+
+      <div class="statRow">
+        <span class="statLabel">GPU available</span>
+        <span class="statVal">{{ cudaAvailable() ? 'yes' : 'no' }}</span>
+      </div>
+
+      @if (vramPct() !== null) {
+        <div class="vram">
+          <div class="vramBar"><div class="vramFill" [style.width.%]="vramPct()"></div></div>
+          <span class="vramText">{{ status()?.vram_used_mb }} / {{ status()?.vram_total_mb }} MB VRAM</span>
+        </div>
+      }
+    </div>
+
+    <!-- Device -->
+    <div class="vePanel">
+      <h3>Inference device</h3>
+      <div class="segmented">
+        <button
+          type="button"
+          [class.active]="!isGpu()"
+          [disabled]="busy() !== null"
+          (click)="switchDevice('cpu')">
+          {{ busy() === 'device:cpu' ? 'Switching…' : 'CPU' }}
+        </button>
+        <button
+          type="button"
+          [class.active]="isGpu()"
+          [disabled]="busy() !== null || !cudaAvailable()"
+          [title]="cudaAvailable() ? '' : 'GPU not visible to this container'"
+          (click)="switchDevice('cuda')">
+          {{ busy() === 'device:cuda' ? 'Switching…' : 'GPU' }}
+        </button>
+      </div>
+      <p class="hint">CPU frees the GPU entirely (slower synthesis). GPU is fast but holds VRAM. Switching unloads then reloads the model on the chosen device.</p>
+    </div>
+
+    <!-- Load / Unload -->
+    <div class="vePanel">
+      <h3>Memory</h3>
+      <div class="btnRow">
+        <button type="button" class="btn" [disabled]="busy() !== null" (click)="load()">
+          {{ busy() === 'load' ? 'Loading…' : 'Load model' }}
+        </button>
+        <button type="button" class="btn danger" [disabled]="busy() !== null" (click)="unload()">
+          {{ busy() === 'unload' ? 'Unloading…' : 'Unload all (free VRAM)' }}
+        </button>
+      </div>
+    </div>
+
+    @if (actionError()) { <div class="vePanel error">{{ actionError() }}</div> }
+    @if (actionNote()) { <div class="vePanel note">{{ actionNote() }}</div> }
+  }
+</div>

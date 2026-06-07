@@ -66,19 +66,23 @@ services:
       # TTS engine triggers Triton's runtime kernel build, which fails with
       # "Failed to find C compiler" inside the slim container.
       TORCHDYNAMO_DISABLE: "1"
-      # ── Inference device knob ────────────────────────────────────────────
-      # OmniVoice selects its device purely via torch.cuda.is_available(), so
-      # this single variable decides GPU vs CPU without any image change:
-      #   OMNIVOICE_CUDA_VISIBLE_DEVICES=     (empty) → no CUDA device visible
-      #                                        → every TTS/ASR backend falls
-      #                                          back to its CPU path; GPU VRAM
-      #                                          is freed.
-      #   OMNIVOICE_CUDA_VISIBLE_DEVICES=0    → use GPU 0 (original behaviour).
-      # Unset defaults to "0" (GPU). Flip it in this stack's .env, then
-      # `docker compose up -d omnivoice` (or redeploy) to switch. The GPU is
-      # still reserved by the `deploy` stanza below, so switching back to GPU
-      # is just this one env var — no structural compose edit needed.
+      # ── Inference device control (two layers) ────────────────────────────
+      # Layer 1 — GPU *visibility* to the container. Keep the GPU visible so
+      # the in-app control panel can switch CPU↔GPU live (no restart). Set to
+      # empty only on a host where the engine must never touch the GPU at all.
+      #   OMNIVOICE_CUDA_VISIBLE_DEVICES=0   → GPU 0 visible (default)
+      #   OMNIVOICE_CUDA_VISIBLE_DEVICES=    → GPU hidden, CPU-only, no toggle
       CUDA_VISIBLE_DEVICES: "${OMNIVOICE_CUDA_VISIBLE_DEVICES-0}"
+      # Layer 2 — effective boot device, honoured by the sysmon device lever
+      # (sysmon_patch.py wraps torch.cuda.is_available). "cpu" boots with NO
+      # model weights on the GPU (no CUDA context created) while leaving the
+      # GPU available for a live switch to "cuda" from the control panel.
+      # The panel persists the live choice to OMNIVOICE_DATA_DIR/device_override,
+      # which takes precedence over this on the next start.
+      #   OMNIVOICE_FORCE_DEVICE=cpu   → boot on CPU, GPU free (default)
+      #   OMNIVOICE_FORCE_DEVICE=cuda  → boot on GPU
+      #   OMNIVOICE_FORCE_DEVICE=auto  → real detection (GPU if visible)
+      OMNIVOICE_FORCE_DEVICE: "${OMNIVOICE_FORCE_DEVICE-cpu}"
     volumes:
       - omnivoice-data:/app/omnivoice_data
     # No host port: engine reachable only by voice-api on the internal

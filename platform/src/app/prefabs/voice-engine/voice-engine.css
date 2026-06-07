@@ -1,0 +1,151 @@
+:host {
+  display: block;
+  height: 100%;
+  font: inherit;
+  color: inherit;
+}
+
+.ve {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  overflow: auto;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.veHeader h2 {
+  margin: 0 0 4px 0;
+}
+
+.veHeader .hint,
+.hint {
+  margin: 4px 0 0 0;
+  color: var(--text-muted, #6b7280);
+  font-size: 13px;
+}
+
+.vePanel {
+  border: 1px solid var(--border, rgba(127, 127, 127, 0.25));
+  border-radius: 10px;
+  padding: 14px 16px;
+  background: var(--panel-bg, rgba(127, 127, 127, 0.04));
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.vePanel h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted, #6b7280);
+}
+
+.vePanel.error {
+  border-color: rgba(220, 38, 38, 0.5);
+  background: rgba(220, 38, 38, 0.08);
+  color: inherit;
+}
+
+.vePanel.note {
+  border-color: rgba(16, 185, 129, 0.5);
+  background: rgba(16, 185, 129, 0.08);
+}
+
+.muted { color: var(--text-muted, #6b7280); }
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.deviceChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.deviceChip.gpu { background: rgba(16, 185, 129, 0.16); color: rgb(5, 150, 105); }
+.deviceChip.cpu { background: rgba(59, 130, 246, 0.14); color: rgb(37, 99, 235); }
+
+.statRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.statLabel { color: var(--text-muted, #6b7280); font-size: 13px; }
+.statVal { font-size: 13px; }
+
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.badge.on { background: rgba(16, 185, 129, 0.16); color: rgb(5, 150, 105); }
+.badge.off { background: rgba(127, 127, 127, 0.14); color: var(--text-muted, #6b7280); }
+.badge.loading { background: rgba(245, 158, 11, 0.16); color: rgb(180, 120, 0); }
+
+.vram { display: flex; flex-direction: column; gap: 4px; }
+.vramBar {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(127, 127, 127, 0.2);
+  overflow: hidden;
+}
+.vramFill {
+  height: 100%;
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.8), rgba(16, 185, 129, 0.8));
+  transition: width 0.4s ease;
+}
+.vramText { font-size: 12px; color: var(--text-muted, #6b7280); }
+
+.segmented {
+  display: inline-flex;
+  border: 1px solid var(--border, rgba(127, 127, 127, 0.35));
+  border-radius: 8px;
+  overflow: hidden;
+  width: fit-content;
+}
+.segmented button {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  padding: 8px 22px;
+  cursor: pointer;
+}
+.segmented button + button { border-left: 1px solid var(--border, rgba(127, 127, 127, 0.35)); }
+.segmented button.active { background: var(--accent, rgba(59, 130, 246, 0.9)); color: #fff; }
+.segmented button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btnRow { display: flex; gap: 10px; flex-wrap: wrap; }
+.btn {
+  appearance: none;
+  font: inherit;
+  color: inherit;
+  border: 1px solid var(--border, rgba(127, 127, 127, 0.35));
+  background: var(--panel-bg, rgba(127, 127, 127, 0.06));
+  border-radius: 8px;
+  padding: 8px 16px;
+  cursor: pointer;
+}
+.btn:hover:not(:disabled) { background: rgba(127, 127, 127, 0.14); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn.danger { border-color: rgba(220, 38, 38, 0.5); color: rgb(220, 38, 38); }
+.btn.danger:hover:not(:disabled) { background: rgba(220, 38, 38, 0.1); }
