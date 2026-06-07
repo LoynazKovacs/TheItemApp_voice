@@ -15,15 +15,14 @@
  *    `verifyUser`) consumed by the routes' auth preHandlers;
  *  - `hasApiKey` (→ SDK `isReady`) gating the reconciler sweep.
  *
- * SDK gaps preserved with raw `fetch` (authenticated via `sdk.getApiKey()`):
- *  - `createVoiceNote`, `uploadFile`, `patchFileGroupIds` forward the END USER's
- *    `Authorization`/`Cookie` (so the file/note is owned by / editable by the
- *    caller, per files RBAC) WHILE still carrying the functional `x-api-key` +
- *    skip-webhooks header. The SDK's `updateAsUser` strips the functional key
- *    and supports neither cookie forwarding nor multipart upload, and there is
- *    no `createAsUser`/user-scoped `uploadFile`, so these keep raw requests.
- *  - `downloadFile` streams `files/:id/content` bytes — the SDK has no file
- *    download helper.
+ * User-attributed writes/uploads (`createVoiceNote`, `uploadFile`,
+ * `patchFileGroupIds`) forward the END USER's `Authorization`/`Cookie` (so the
+ * file/note is owned by / editable by the caller, per files RBAC) WHILE still
+ * carrying the functional `x-api-key` + skip-webhooks header. This is exactly
+ * the SDK's `asUser({ authorization, cookie }, { keepApiKey: true })` scoped
+ * client — no raw `fetch` needed. `downloadFile` delegates to the SDK's
+ * `downloadFile(id)` (functional key) and maps `{ data, contentType, filename }`
+ * to this app's `FileBlob` shape.
  *
  * The functional `x-api-key` is auto-provisioned by core and rotated on each
  * registration — see updateApiKey.
@@ -166,11 +165,8 @@ export class CoreApiClient {
    * file was uploaded via `uploadDirect` so its row-security has groupIds=[]
    * and only the owner can edit it. The voice-backend's functional user is
    * NOT the owner — but the calling user is, so we proxy the patch under
-   * their credentials.
-   *
-   * SDK gap: `updateAsUser` strips the functional `x-api-key` and supports only
-   * a Bearer JWT (no cookie). This forwards BOTH the user's creds AND the
-   * functional key, so it stays a raw request authenticated via `getApiKey()`.
+   * their credentials via `asUser(..., { keepApiKey: true })` (forwards the
+   * user's creds AND the functional key + skip-webhooks header).
    */
   async patchFileGroupIds(
     fileId: string,
@@ -178,16 +174,9 @@ export class CoreApiClient {
     authorization?: string,
     cookie?: string,
   ): Promise<void> {
-    const url = `${this.baseUrl}/api/dynamic/files/${encodeURIComponent(fileId)}`;
-    const res = await fetch(url, {
-      method: 'PUT',
-      headers: this.requestHeaders(authorization, cookie),
-      body: JSON.stringify({ $set: { groupIds } }),
-    });
-    if (!res.ok) {
-      const body = await res.text();
-      throw new CoreApiError('PUT', url, res.status, body.slice(0, 500));
-    }
+    await this.sdk
+      .asUser({ authorization, cookie }, { keepApiKey: true })
+      .update('files', fileId, { $set: { groupIds } });
   }
 
   /**
@@ -198,9 +187,10 @@ export class CoreApiClient {
    * would belong to the functional user and the originating user might lose
    * read access depending on RBAC.
    *
-   * SDK gap: the SDK's `uploadFile` uses only the functional key (no end-user
-   * forwarding) and a different visibility enum, so this stays a raw multipart
-   * request authenticated via `getApiKey()`.
+   * Delegates to `asUser(..., { keepApiKey: true }).uploadFile(...)` — the
+   * scoped client forwards the user's creds AND the functional key + skip-
+   * webhooks header, and builds the multipart body. `kind: 'file'` and the
+   * `private`-default visibility match the prior raw form fields.
    */
   async uploadFile(
     blob: FileBlob,
@@ -208,55 +198,30 @@ export class CoreApiClient {
     authorization?: string,
     cookie?: string,
   ): Promise<{ _id: string }> {
-    const url = `${this.baseUrl}/api/files/uploadDirect`;
-    const form = new FormData();
-    form.append(
-      'file',
-      new Blob([blob.bytes as unknown as BlobPart], { type: blob.mimeType }),
-      blob.filename,
-    );
-    if (options.title) form.append('title', options.title);
-    form.append('kind', 'file');
-    form.append('visibility', options.visibility ?? 'private');
-    // Don't send Content-Type — FormData wants to set its own multipart
-    // boundary. Build headers manually with everything BUT Content-Type.
-    const apiKey = this.sdk.getApiKey();
-    const headers: Record<string, string> = {};
-    if (apiKey) headers['x-api-key'] = apiKey;
-    headers['x-theitemapp-skip-webhooks'] = '1';
-    if (authorization?.trim()) headers.Authorization = authorization.trim();
-    if (cookie?.trim()) headers.Cookie = cookie.trim();
-    const res = await fetch(url, { method: 'POST', headers, body: form as unknown as BodyInit });
-    if (!res.ok) {
-      const body = await res.text();
-      throw new CoreApiError('POST', url, res.status, body.slice(0, 500));
-    }
-    return (await res.json()) as { _id: string };
+    return this.sdk
+      .asUser({ authorization, cookie }, { keepApiKey: true })
+      .uploadFile(blob.bytes, {
+        filename: blob.filename,
+        mimeType: blob.mimeType,
+        kind: 'file',
+        visibility: options.visibility === 'public' ? 'everyone' : 'private',
+        ...(options.title ? { title: options.title } : {}),
+      });
   }
 
   /**
    * Create a voice_notes row via the dynamic API, attributed to the originating
-   * user by forwarding their `authorization`/`cookie`.
-   *
-   * SDK gap: the SDK has no `createAsUser`, so this stays a raw request
-   * authenticated via `getApiKey()` while also forwarding the user's creds.
+   * user by forwarding their `authorization`/`cookie` via
+   * `asUser(..., { keepApiKey: true })` (user creds + functional key).
    */
   async createVoiceNote(
     doc: Record<string, unknown>,
     authorization?: string,
     cookie?: string,
   ): Promise<{ _id: string }> {
-    const url = `${this.baseUrl}/api/dynamic/voice_notes`;
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: this.requestHeaders(authorization, cookie),
-      body: JSON.stringify(doc),
-    });
-    if (!res.ok) {
-      const body = await res.text();
-      throw new CoreApiError('POST', url, res.status, body.slice(0, 500));
-    }
-    return (await res.json()) as { _id: string };
+    return this.sdk
+      .asUser({ authorization, cookie }, { keepApiKey: true })
+      .create<{ _id: string }>('voice_notes', doc);
   }
 
   /** Create a voice_voices row. Returns the inserted document. */
@@ -268,42 +233,18 @@ export class CoreApiClient {
    * Stream a `files` record's bytes into memory. Voice reference WAVs are small
    * (a few hundred KB), so buffering the whole blob is fine here.
    *
-   * SDK gap: the SDK has no file-download helper, so this stays a raw request
-   * (functional key) hitting the metadata + `files/:id/content` endpoints.
+   * Delegates to the SDK's `downloadFile(id)` (functional key) and maps its
+   * `{ data, contentType, filename }` to this app's `FileBlob`. The SDK returns
+   * `null` on a genuine 404 — preserve the prior throwing behaviour (callers
+   * expect a `FileBlob`, never null) by raising a `CoreApiError`.
    */
   async downloadFile(fileId: string): Promise<FileBlob> {
-    const meta = await this.sdk.get<FileMeta>('files', fileId);
-    const mimeType = (meta?.mimeType ?? '').trim() || 'application/octet-stream';
-    const filename = (meta?.originalName ?? '').trim() || `${fileId}.bin`;
-
-    const contentUrl = `${this.baseUrl}/api/files/${encodeURIComponent(fileId)}/content`;
-    const contentRes = await fetch(contentUrl, { method: 'GET', headers: this.functionalHeaders() });
-    if (!contentRes.ok) {
-      const body = await contentRes.text();
-      throw new CoreApiError('GET', contentUrl, contentRes.status, body.slice(0, 500));
+    const file = await this.sdk.downloadFile(fileId);
+    if (!file) {
+      throw new CoreApiError('GET', `${this.baseUrl}/api/files/${encodeURIComponent(fileId)}/content`, 404, 'File content not found');
     }
-    const buf = new Uint8Array(await contentRes.arrayBuffer());
-    return { bytes: buf, mimeType, filename };
-  }
-
-  /** Functional-key headers (Content-Type + x-api-key + skip-webhooks). */
-  private functionalHeaders(): Record<string, string> {
-    const apiKey = this.sdk.getApiKey();
-    return {
-      'Content-Type': 'application/json',
-      ...(apiKey ? { 'x-api-key': apiKey } : {}),
-      'x-theitemapp-skip-webhooks': '1',
-    };
-  }
-
-  /** Functional-key headers plus the originating user's forwarded credentials. */
-  private requestHeaders(authorization?: string, cookie?: string): Record<string, string> {
-    const header = typeof authorization === 'string' && authorization.trim().length > 0 ? authorization.trim() : '';
-    const cookieHeader = typeof cookie === 'string' && cookie.trim().length > 0 ? cookie.trim() : '';
-    return {
-      ...this.functionalHeaders(),
-      ...(header ? { Authorization: header } : {}),
-      ...(cookieHeader ? { Cookie: cookieHeader } : {}),
-    };
+    const mimeType = (file.contentType ?? '').trim() || 'application/octet-stream';
+    const filename = (file.filename ?? '').trim() || `${fileId}.bin`;
+    return { bytes: file.data, mimeType, filename };
   }
 }
