@@ -12,7 +12,7 @@
     "trigger": "help-menu",
     "audience": "user",
     "isPublished": true,
-    "version": 3,
+    "version": 4,
     "tags": [
       "voice",
       "dashboard",
@@ -70,7 +70,7 @@
         "anchorKey": "core.sidebar.app.voice",
         "placement": "right",
         "title": "Open the Voice app",
-        "body": "Click **Voice** to open it. Opening an app drops you onto its **home dashboard** — for Voice that's the **Voice Studio** board. From there we'll open the Dictaphone dashboard together. I'll continue once it loads.",
+        "body": "Click **Voice** to open it. Opening an app drops you onto its **home dashboard** — for Voice that's the new **Overview** board. From there we'll open the **Dictaphone** dashboard together. I'll continue once it loads.",
         "buttons": [],
         "beforeShow": {
           "waitForSelector": "[data-testid=\"core.sidebar.app.voice\"]",
@@ -334,7 +334,7 @@
     "trigger": "help-menu",
     "audience": "user",
     "isPublished": true,
-    "version": 3,
+    "version": 4,
     "tags": [
       "voice",
       "dashboard",
@@ -391,7 +391,7 @@
         "anchorKey": "core.sidebar.app.voice",
         "placement": "right",
         "title": "Open the Voice app",
-        "body": "Click **Voice** to open it. Opening an app drops you onto its **home dashboard** — for Voice that's the **Voice Studio** board. From there we'll open the Settings dashboard together. I'll continue once it loads.",
+        "body": "Click **Voice** to open it. Opening an app drops you onto its **home dashboard** — for Voice that's the new **Overview** board. From there we'll open the **Voice Settings** dashboard together. I'll continue once it loads.",
         "buttons": [],
         "beforeShow": {
           "waitForSelector": "[data-testid=\"core.sidebar.app.voice\"]",
@@ -651,7 +651,7 @@
     "trigger": "help-menu",
     "audience": "user",
     "isPublished": true,
-    "version": 3,
+    "version": 4,
     "tags": [
       "voice",
       "dashboard",
@@ -709,7 +709,7 @@
         "anchorKey": "core.sidebar.app.voice",
         "placement": "right",
         "title": "Open the Voice app",
-        "body": "Click **Voice** to open it. Opening an app drops you onto its **home dashboard** — for Voice that's the **Voice Studio** board we're about to tour. I'll continue once it loads.",
+        "body": "Click **Voice** to open it. Opening an app drops you onto its **home dashboard** — for Voice that's the new **Overview** board. From there we'll open the **Voice Studio** dashboard together. I'll continue once it loads.",
         "buttons": [],
         "beforeShow": {
           "waitForSelector": "[data-testid=\"core.sidebar.app.voice\"]",
@@ -723,10 +723,30 @@
         "assertions": []
       },
       {
+        "id": "open-studio",
+        "anchorKey": "core.sidebar.dashboard.860000000000000000010001",
+        "placement": "right",
+        "title": "Open the Voice Studio board",
+        "body": "In the **Voice** app's **Dashboards**, click **Voice Studio** to open it. I'll continue once it loads.",
+        "buttons": [],
+        "beforeShow": {
+          "waitForSelector": "[data-testid=\"core.sidebar.dashboard.860000000000000000010001\"]",
+          "delayMs": 200
+        },
+        "showIf": {
+          "selectorMissing": "[data-testid=\"window-voice-studio\"]"
+        },
+        "advanceOn": {
+          "event": "click"
+        },
+        "modal": false,
+        "assertions": []
+      },
+      {
         "id": "arrived",
         "placement": "center",
         "title": "You're on Voice Studio",
-        "body": "This is the Voice app's home dashboard, now the **background of your desktop**. It holds a single panel — the full text-to-speech and speech-to-text workbench. Let's go through it.",
+        "body": "This is the **Voice Studio** board — the Voice app's text-to-speech and speech-to-text workbench. It holds a single panel that drives both engines directly. Let's go through it.",
         "buttons": [],
         "beforeShow": {
           "waitForSelector": "[data-testid=\"window-voice-studio\"]",
