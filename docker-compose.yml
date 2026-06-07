@@ -66,6 +66,19 @@ services:
       # TTS engine triggers Triton's runtime kernel build, which fails with
       # "Failed to find C compiler" inside the slim container.
       TORCHDYNAMO_DISABLE: "1"
+      # ── Inference device knob ────────────────────────────────────────────
+      # OmniVoice selects its device purely via torch.cuda.is_available(), so
+      # this single variable decides GPU vs CPU without any image change:
+      #   OMNIVOICE_CUDA_VISIBLE_DEVICES=     (empty) → no CUDA device visible
+      #                                        → every TTS/ASR backend falls
+      #                                          back to its CPU path; GPU VRAM
+      #                                          is freed.
+      #   OMNIVOICE_CUDA_VISIBLE_DEVICES=0    → use GPU 0 (original behaviour).
+      # Unset defaults to "0" (GPU). Flip it in this stack's .env, then
+      # `docker compose up -d omnivoice` (or redeploy) to switch. The GPU is
+      # still reserved by the `deploy` stanza below, so switching back to GPU
+      # is just this one env var — no structural compose edit needed.
+      CUDA_VISIBLE_DEVICES: "${OMNIVOICE_CUDA_VISIBLE_DEVICES-0}"
     volumes:
       - omnivoice-data:/app/omnivoice_data
     # No host port: engine reachable only by voice-api on the internal
@@ -77,8 +90,10 @@ services:
       retries: 3
       start_period: 180s
     restart: unless-stopped
-    # Override OMNIVOICE_IMAGE with a CPU-tagged build (when available upstream)
-    # if running on a host without an NVIDIA GPU, and remove the deploy stanza.
+    # GPU stays reserved so toggling GPU<->CPU is a one-variable change
+    # (OMNIVOICE_CUDA_VISIBLE_DEVICES above) with no structural compose edit.
+    # When that var is empty the device is mounted but hidden from CUDA, so no
+    # VRAM is allocated. On a GPU-less host, remove this stanza.
     deploy:
       resources:
         reservations:

@@ -172,6 +172,21 @@ Brings up the full stack on the shared `theitemapp` Docker network. The
 `start`/`stop` scripts in `package.json` are thin wrappers over the equivalent
 `docker compose` commands.
 
-Run on a CPU-only host by overriding `OMNIVOICE_IMAGE` with the upstream CPU
-tag (when available) and removing the `deploy.resources.reservations.devices`
-stanza from the `omnivoice` service.
+### GPU vs CPU
+
+OmniVoice picks its inference device purely via `torch.cuda.is_available()`, so a
+single env var in this stack's `.env` switches it without any image or compose
+edit:
+
+| `OMNIVOICE_CUDA_VISIBLE_DEVICES` | Effect |
+| --- | --- |
+| _empty_ | CPU-only — every TTS/ASR backend uses its CPU path; GPU VRAM is freed (~4 GB). Slower inference. |
+| `0` | Use GPU 0 (default when the var is unset). |
+
+Apply a change with `docker compose up -d omnivoice` (or redeploy the repo). The
+GPU is left reserved by the `deploy` stanza so flipping back to GPU is just this
+one variable.
+
+On a host with **no** GPU at all, also remove the
+`deploy.resources.reservations.devices` stanza from the `omnivoice` service (and
+optionally override `OMNIVOICE_IMAGE` with an upstream CPU tag when available).
