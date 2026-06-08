@@ -25,7 +25,7 @@
 }
 
 .vsPanel {
-  border: 1px solid var(--border, rgba(127, 127, 127, 0.25));
+  border: 1px solid var(--app-border, rgba(127, 127, 127, 0.25));
   border-radius: 10px;
   padding: 14px 16px;
   background: var(--panel-bg, rgba(127, 127, 127, 0.04));
@@ -114,7 +114,7 @@
 }
 
 .voiceRow {
-  border: 1px solid var(--border, rgba(127, 127, 127, 0.2));
+  border: 1px solid var(--app-border, rgba(127, 127, 127, 0.25));
   border-radius: 8px;
   padding: 10px 12px;
   cursor: pointer;
@@ -207,7 +207,7 @@
   gap: 6px;
   padding: 6px 12px;
   border-radius: 6px;
-  border: 1px solid var(--border, rgba(127, 127, 127, 0.3));
+  border: 1px solid var(--app-border, rgba(127, 127, 127, 0.25));
   background: var(--btn-bg, rgba(127, 127, 127, 0.05));
   color: inherit;
   font: inherit;

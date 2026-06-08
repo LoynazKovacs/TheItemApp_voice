@@ -27,7 +27,7 @@
 }
 
 .vePanel {
-  border: 1px solid var(--border, rgba(127, 127, 127, 0.25));
+  border: 1px solid var(--app-border, rgba(127, 127, 127, 0.25));
   border-radius: 10px;
   padding: 14px 16px;
   background: var(--panel-bg, rgba(127, 127, 127, 0.04));
@@ -116,7 +116,7 @@
 
 .segmented {
   display: inline-flex;
-  border: 1px solid var(--border, rgba(127, 127, 127, 0.35));
+  border: 1px solid var(--app-border, rgba(127, 127, 127, 0.25));
   border-radius: 8px;
   overflow: hidden;
   width: fit-content;
@@ -130,7 +130,7 @@
   padding: 8px 22px;
   cursor: pointer;
 }
-.segmented button + button { border-left: 1px solid var(--border, rgba(127, 127, 127, 0.35)); }
+.segmented button + button { border-left: 1px solid var(--app-border, rgba(127, 127, 127, 0.25)); }
 .segmented button.active { background: var(--accent, rgba(59, 130, 246, 0.9)); color: #fff; }
 .segmented button:disabled { opacity: 0.5; cursor: not-allowed; }
 
@@ -139,7 +139,7 @@
   appearance: none;
   font: inherit;
   color: inherit;
-  border: 1px solid var(--border, rgba(127, 127, 127, 0.35));
+  border: 1px solid var(--app-border, rgba(127, 127, 127, 0.25));
   background: var(--panel-bg, rgba(127, 127, 127, 0.06));
   border-radius: 8px;
   padding: 8px 16px;

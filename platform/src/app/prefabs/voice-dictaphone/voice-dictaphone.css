@@ -46,8 +46,8 @@
 .langPicker select {
   font: inherit;
   color: inherit;
-  background: var(--surface-2, #222);
-  border: 1px solid var(--border, #444);
+  background: var(--app-button-bg, rgba(127, 127, 127, 0.10));
+  border: 1px solid var(--app-border, rgba(127, 127, 127, 0.25));
   border-radius: 6px;
   padding: 2px 6px;
   cursor: pointer;
@@ -78,8 +78,8 @@
   min-height: 110px;
   padding: 16px 22px;
   border-radius: 14px;
-  border: 1px solid var(--border, #444);
-  background: var(--surface-2, #222);
+  border: 1px solid var(--app-border, rgba(127, 127, 127, 0.25));
+  background: var(--app-button-bg, rgba(127, 127, 127, 0.10));
   color: inherit;
   cursor: pointer;
   font-weight: 600;
@@ -87,7 +87,7 @@
 }
 
 .bigBtn:hover:not(:disabled) {
-  background: var(--surface-3, #2a2a2a);
+  background: var(--app-button-bg-hover, rgba(127, 127, 127, 0.16));
 }
 
 .bigBtn:active:not(:disabled) {
@@ -131,9 +131,9 @@
   flex-direction: column;
   gap: 10px;
   padding: 10px;
-  border: 1px solid var(--border, #444);
+  border: 1px solid var(--app-border, rgba(127, 127, 127, 0.25));
   border-radius: 10px;
-  background: var(--surface-1, #1a1a1a);
+  background: var(--app-panel-bg, rgba(127, 127, 127, 0.06));
 }
 
 .preview audio {
@@ -169,8 +169,8 @@
 .field textarea {
   font: inherit;
   color: inherit;
-  background: var(--surface-2, #222);
-  border: 1px solid var(--border, #444);
+  background: var(--app-button-bg, rgba(127, 127, 127, 0.10));
+  border: 1px solid var(--app-border, rgba(127, 127, 127, 0.25));
   border-radius: 6px;
   padding: 6px 8px;
   resize: vertical;
@@ -192,8 +192,8 @@
   gap: 6px;
   padding: 6px 12px;
   border-radius: 8px;
-  border: 1px solid var(--border, #444);
-  background: var(--surface-2, #222);
+  border: 1px solid var(--app-border, rgba(127, 127, 127, 0.25));
+  background: var(--app-button-bg, rgba(127, 127, 127, 0.10));
   color: inherit;
   cursor: pointer;
   font-weight: 500;
@@ -201,7 +201,7 @@
 }
 
 .btn:hover:not(:disabled) {
-  background: var(--surface-3, #2a2a2a);
+  background: var(--app-button-bg-hover, rgba(127, 127, 127, 0.16));
 }
 
 .btn:disabled {
@@ -248,9 +248,9 @@
   align-items: center;
   gap: 8px;
   padding: 14px 12px;
-  border: 1px dashed var(--border, #555);
+  border: 1px dashed var(--app-border, rgba(127, 127, 127, 0.25));
   border-radius: 10px;
-  background: var(--surface-1, #1a1a1a);
+  background: var(--app-panel-bg, rgba(127, 127, 127, 0.06));
   text-align: center;
   transition: background-color 120ms ease, border-color 120ms ease;
 }
@@ -299,9 +299,9 @@
   flex-direction: column;
   gap: 4px;
   padding: 8px 10px;
-  border: 1px solid var(--border, #444);
+  border: 1px solid var(--app-border, rgba(127, 127, 127, 0.25));
   border-radius: 8px;
-  background: var(--surface-2, #222);
+  background: var(--app-button-bg, rgba(127, 127, 127, 0.10));
   font-size: 0.85em;
 }
 
@@ -354,7 +354,7 @@
 .importTranscript {
   margin: 4px 0 0;
   padding: 6px 8px;
-  background: var(--surface-1, #1a1a1a);
+  background: var(--app-panel-bg, rgba(127, 127, 127, 0.06));
   border-radius: 6px;
   color: #ddd;
   font-size: 0.9em;
