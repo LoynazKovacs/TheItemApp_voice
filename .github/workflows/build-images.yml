@@ -1,0 +1,96 @@
+name: Build Images
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      force_all:
+        description: "Build all images regardless of changes"
+        type: boolean
+        default: false
+
+concurrency:
+  group: build-images
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  GAR_LOCATION: ${{ vars.GAR_LOCATION || 'europe-central2' }}
+  GCP_PROJECT: ${{ vars.GCP_PROJECT || 'theitemapp' }}
+  GAR_REPOSITORY: ${{ vars.GAR_REPOSITORY || 'theitemapp' }}
+
+jobs:
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    outputs:
+      platform: ${{ steps.filter.outputs.platform }}
+      backend: ${{ steps.filter.outputs.backend }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            platform:
+              - 'platform/**'
+            backend:
+              - 'backend/**'
+              - 'dbseed/**'
+
+  build:
+    name: Build & push
+    needs: changes
+    if: always() && needs.changes.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_DEPLOY_SA_KEY }}
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker "${{ env.GAR_LOCATION }}-docker.pkg.dev" --quiet
+
+      - name: Extract app version
+        id: versions
+        run: |
+          APP_VERSION=$(node -e "console.log(require('./dbseed/manifest.json').appVersion || 'latest')")
+          echo "app=$APP_VERSION" >> "$GITHUB_OUTPUT"
+
+  # NOTE: omnivoice (GPU ML image) is built on the GPU host, not in CI.
+
+      - name: Build & push voice
+        if: needs.changes.outputs.platform == 'true' || github.event.inputs.force_all == 'true' || github.event_name == 'workflow_dispatch'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: platform/Dockerfile
+          push: true
+          tags: |
+            ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT }}/${{ env.GAR_REPOSITORY }}/voice:${{ github.sha }}
+            ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT }}/${{ env.GAR_REPOSITORY }}/voice:${{ steps.versions.outputs.app }}
+            ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT }}/${{ env.GAR_REPOSITORY }}/voice:latest
+          cache-from: type=gha,scope=voice
+          cache-to: type=gha,mode=max,scope=voice
+
+      - name: Build & push voice-api
+        if: needs.changes.outputs.backend == 'true' || github.event.inputs.force_all == 'true' || github.event_name == 'workflow_dispatch'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: backend/Dockerfile
+          push: true
+          tags: |
+            ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT }}/${{ env.GAR_REPOSITORY }}/voice-api:${{ github.sha }}
+            ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT }}/${{ env.GAR_REPOSITORY }}/voice-api:${{ steps.versions.outputs.app }}
+            ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT }}/${{ env.GAR_REPOSITORY }}/voice-api:latest
+          cache-from: type=gha,scope=voice-api
+          cache-to: type=gha,mode=max,scope=voice-api
