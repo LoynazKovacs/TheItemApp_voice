@@ -4,41 +4,26 @@
       "$oid": "860000000000000000040001"
     },
     "key": "voice_admin",
-    "keyLower": "voice_admin",
     "name": "Voice Admin",
     "description": "Full administrative access to Voice: manage voices, manage all notes, configure engine settings.",
-    "permissions": [],
-    "appId": {
-      "$oid": "860000000000000000000001"
-    },
-    "systemManaged": true
+    "permissions": []
   },
   {
     "_id": {
       "$oid": "860000000000000000040002"
     },
     "key": "voice_editor",
-    "keyLower": "voice_editor",
     "name": "Voice Editor",
     "description": "Editor access to Voice: record and manage own notes, create and edit voices.",
-    "permissions": [],
-    "appId": {
-      "$oid": "860000000000000000000001"
-    },
-    "systemManaged": true
+    "permissions": []
   },
   {
     "_id": {
       "$oid": "860000000000000000040003"
     },
     "key": "voice_viewer",
-    "keyLower": "voice_viewer",
     "name": "Voice Viewer",
     "description": "Read-only access to Voice: view own notes and browse the voice catalog.",
-    "permissions": [],
-    "appId": {
-      "$oid": "860000000000000000000001"
-    },
-    "systemManaged": true
+    "permissions": []
   }
 ]

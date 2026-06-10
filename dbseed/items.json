@@ -106,7 +106,7 @@
         "groupIds": {
           "type": "array",
           "title": "Groups",
-          "description": "Row-security scope. Empty = owner-only (createdByUserId). Add voice_admin group to grant backend management access.",
+          "description": "Row-security scope. Empty = owner-only (createdByUserId). Add voice_admin to grant backend management access.",
           "items": {
             "type": "string",
             "x-ref": "groups"
@@ -307,7 +307,7 @@
         "audioFileId": {
           "type": "string",
           "title": "Reference audio",
-          "description": "Reference recording (a `files` row) that OmniVoice clones to create this voice. 3+ seconds of clean single-speaker speech recommended. Must be readable by the voice-backend functional user — voices created from a voice note have the file's groupIds widened to include voice_admin automatically.",
+          "description": "Reference recording (a `files` row) that OmniVoice clones to create this voice. 3+ seconds of clean single-speaker speech recommended. Must be readable by the voice-backend functional user — voices created from a voice note have the file's groupIds widened automatically.",
           "x-ref": "files",
           "x-ui": {
             "control": "fileUpload",
@@ -360,7 +360,7 @@
         "groupIds": {
           "type": "array",
           "title": "Groups",
-          "description": "Row-security scope. Must include voice_admin so the reconciler (running under voice-backend functional user) can read the reference audio and provision the profile.",
+          "description": "Row-security scope. Must include the voice-backend functional user's group so the reconciler can read the reference audio and provision the profile.",
           "items": {
             "type": "string",
             "x-ref": "groups"
