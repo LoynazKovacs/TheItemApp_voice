@@ -11,7 +11,7 @@
     "description": "Audio notes captured in the Voice app — recorded in the browser Dictaphone or imported by dropping an audio/video file — each stored as a `files` row alongside an auto-generated, editable transcript so the note is readable and searchable without playback.",
     "ai": {
       "purpose": "Stores dictaphone recordings: the audio blob (as a `files` row) plus the transcribed text so the note is searchable and readable without playback.",
-      "howItWorks": "The `VoiceDictaphonePrefab` records audio in the browser, calls `/voice-api/api/stt` to transcribe, then on save uploads the audio to core's `/api/files/uploadDirect` and creates a `voice_notes` row linking `audioFileId` to the resulting file and storing the (optionally edited) `transcript`.",
+      "howItWorks": "The `VoiceDictaphonePrefab` records audio in the browser, calls `/voice-api/api/stt` to transcribe, then on save uploads the audio to core's `/api/files/uploadDirect` and creates a `voice_notes` row linking `audioFileId` to the resulting file and storing the (optionally edited) `transcript`. `createdByUserId` is auto-stamped from the authenticated session; row-security uses it to restrict each user to their own notes.",
       "manipulation": "Create rows through the dictaphone prefab. Editing `transcript` later is fine — it's just the cached text. Don't edit `audioFileId` unless you mean to swap the underlying recording.",
       "outcomes": [
         {
@@ -20,12 +20,22 @@
         }
       ],
       "warnings": [
-        "Deleting a `voice_notes` row does NOT delete the underlying `files` record. Delete the file separately if needed."
+        "Deleting a `voice_notes` row does NOT delete the underlying `files` record. Delete the file separately if needed.",
+        "`createdByUserId` is server-stamped and drives row-security — do not send it in create/update payloads."
       ]
     },
     "icon": "lucide:cassette-tape",
     "appId": {
       "$oid": "860000000000000000000001"
+    },
+    "behavior": {
+      "security": {
+        "groupField": "groupIds",
+        "userField": "createdByUserId",
+        "userFieldMode": "single",
+        "combine": "any",
+        "allowEmptyGroupIds": true
+      }
     },
     "schema": {
       "type": "object",
@@ -83,10 +93,20 @@
             "readonly": true
           }
         },
+        "createdByUserId": {
+          "type": "string",
+          "title": "Owner",
+          "description": "User who created this note. Auto-stamped from the authenticated session on creation; drives row-security so each user only sees their own notes.",
+          "x-ref": "users",
+          "x-ui": {
+            "readonly": true,
+            "hideInForm": true
+          }
+        },
         "groupIds": {
           "type": "array",
           "title": "Groups",
-          "description": "Row-security scope. Empty = owner-only.",
+          "description": "Row-security scope. Empty = owner-only (createdByUserId). Add voice_admin group to grant backend management access.",
           "items": {
             "type": "string",
             "x-ref": "groups"
@@ -124,7 +144,13 @@
       "read": {
         "groupIds": [
           {
-            "$oid": "7000000000000000001d0001"
+            "$oid": "860000000000000000040001"
+          },
+          {
+            "$oid": "860000000000000000040002"
+          },
+          {
+            "$oid": "860000000000000000040003"
           },
           {
             "$oid": "7000000000000000001d0002"
@@ -134,7 +160,10 @@
       "create": {
         "groupIds": [
           {
-            "$oid": "7000000000000000001d0001"
+            "$oid": "860000000000000000040001"
+          },
+          {
+            "$oid": "860000000000000000040002"
           },
           {
             "$oid": "7000000000000000001d0002"
@@ -144,7 +173,10 @@
       "edit": {
         "groupIds": [
           {
-            "$oid": "7000000000000000001d0001"
+            "$oid": "860000000000000000040001"
+          },
+          {
+            "$oid": "860000000000000000040002"
           },
           {
             "$oid": "7000000000000000001d0002"
@@ -154,7 +186,7 @@
       "delete": {
         "groupIds": [
           {
-            "$oid": "7000000000000000001d0001"
+            "$oid": "860000000000000000040001"
           },
           {
             "$oid": "7000000000000000001d0002"
@@ -191,7 +223,7 @@
       ],
       "warnings": [
         "Don't manually edit `profileId` — it's backend-managed by the reconciler. Editing it points the row at a stale OmniVoice profile that may not exist after a rebuild.",
-        "`audioFileId` MUST point at a real `files` record the voice-api functional user can read (admin/user group, not private). Private files won't be visible to the reconciler.",
+        "`audioFileId` MUST point at a real `files` record the voice-backend functional user can read. The reconciler runs under voice_admin credentials — the file must have voice_admin in its groupIds or be otherwise accessible.",
         "Do not delete a voice that users have selected as their preference — flip `enabled=false` instead, so the prefab can fall back gracefully."
       ]
     },
@@ -275,7 +307,7 @@
         "audioFileId": {
           "type": "string",
           "title": "Reference audio",
-          "description": "Reference recording (a `files` row) that OmniVoice clones to create this voice. 3+ seconds of clean single-speaker speech recommended. Must be readable by the voice-backend functional user — voices created from a voice note have the file's groupIds widened automatically.",
+          "description": "Reference recording (a `files` row) that OmniVoice clones to create this voice. 3+ seconds of clean single-speaker speech recommended. Must be readable by the voice-backend functional user — voices created from a voice note have the file's groupIds widened to include voice_admin automatically.",
           "x-ref": "files",
           "x-ui": {
             "control": "fileUpload",
@@ -328,7 +360,7 @@
         "groupIds": {
           "type": "array",
           "title": "Groups",
-          "description": "Row-security scope. Must include the voice-backend functional user's group so the reconciler can read the reference audio and provision the profile.",
+          "description": "Row-security scope. Must include voice_admin so the reconciler (running under voice-backend functional user) can read the reference audio and provision the profile.",
           "items": {
             "type": "string",
             "x-ref": "groups"
@@ -370,7 +402,13 @@
       "read": {
         "groupIds": [
           {
-            "$oid": "7000000000000000001d0001"
+            "$oid": "860000000000000000040001"
+          },
+          {
+            "$oid": "860000000000000000040002"
+          },
+          {
+            "$oid": "860000000000000000040003"
           },
           {
             "$oid": "7000000000000000001d0002"
@@ -380,21 +418,27 @@
       "create": {
         "groupIds": [
           {
-            "$oid": "7000000000000000001d0001"
+            "$oid": "860000000000000000040001"
+          },
+          {
+            "$oid": "860000000000000000040002"
           }
         ]
       },
       "edit": {
         "groupIds": [
           {
-            "$oid": "7000000000000000001d0001"
+            "$oid": "860000000000000000040001"
+          },
+          {
+            "$oid": "860000000000000000040002"
           }
         ]
       },
       "delete": {
         "groupIds": [
           {
-            "$oid": "7000000000000000001d0001"
+            "$oid": "860000000000000000040001"
           }
         ]
       }

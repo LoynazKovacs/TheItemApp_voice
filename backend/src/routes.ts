@@ -15,9 +15,9 @@ interface RouteDeps {
   reconciler: VoiceProfileReconciler;
 }
 
-/** "users" group — voice-backend functional user is a member, so adding this
- *  to a file's groupIds lets the reconciler read the bytes. */
-const VOICE_BACKEND_GROUP_ID = '7000000000000000001d0002';
+/** voice_admin group — adding this to a file's groupIds lets the voice-backend
+ *  functional user (a voice_admin member) read the bytes for reconciliation. */
+const VOICE_BACKEND_GROUP_ID = '860000000000000000040001';
 
 function createAuthPreHandler(coreApi: CoreApiClient) {
   return async (request: FastifyRequest, reply: FastifyReply) => {
@@ -477,7 +477,13 @@ export function registerRoutes(app: FastifyInstance, deps: RouteDeps): void {
     }
 
     try {
-      const note = await deps.coreApi.getVoiceNote(noteId);
+      // Forward caller auth: needed for owner row-security on voice_notes
+      // (behavior.security userField=createdByUserId) and for the file-row
+      // groupIds patch that follows.
+      const authorization = authorizationHeader(request.headers.authorization);
+      const cookie = cookieHeader(request.headers.cookie);
+
+      const note = await deps.coreApi.getVoiceNote(noteId, authorization, cookie);
       if (!note) return reply.code(404).send({ error: 'Voice note not found' });
 
       const audioFileId = extractFileId(note.audioFileId);
@@ -488,11 +494,6 @@ export function registerRoutes(app: FastifyInstance, deps: RouteDeps): void {
       if (!transcript) {
         return reply.code(422).send({ error: 'Voice note has no transcript — required as the reference text' });
       }
-
-      // Forward caller auth so the file-row groupIds patch passes the
-      // owner-only RBAC on files uploaded via uploadDirect.
-      const authorization = authorizationHeader(request.headers.authorization);
-      const cookie = cookieHeader(request.headers.cookie);
 
       // Read current groupIds first so we add (rather than replace) ours.
       const fileMeta = await deps.coreApi.getFileMeta(audioFileId);
