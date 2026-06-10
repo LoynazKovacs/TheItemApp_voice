@@ -1,0 +1,29 @@
+[
+  {
+    "_id": {
+      "$oid": "860000000000000000040001"
+    },
+    "key": "voice_admin",
+    "name": "Voice Admin",
+    "description": "Full administrative access to Voice: manage voices, manage all notes, configure engine settings.",
+    "permissions": []
+  },
+  {
+    "_id": {
+      "$oid": "860000000000000000040002"
+    },
+    "key": "voice_editor",
+    "name": "Voice Editor",
+    "description": "Editor access to Voice: record and manage own notes, create and edit voices.",
+    "permissions": []
+  },
+  {
+    "_id": {
+      "$oid": "860000000000000000040003"
+    },
+    "key": "voice_viewer",
+    "name": "Voice Viewer",
+    "description": "Read-only access to Voice: view own notes and browse the voice catalog.",
+    "permissions": []
+  }
+]

@@ -37,8 +37,8 @@ import {
 
 export { CoreApiError };
 
-/** Platform Admins group — members may mutate the voice engine device/load. */
-const ADMIN_GROUP_ID = '7000000000000000001d0001';
+/** Voice Admin group — members may mutate the voice engine device/load. */
+const ADMIN_GROUP_ID = '860000000000000000040001';
 
 export type CoreApiConfig = {
   baseUrl: string;
@@ -146,8 +146,19 @@ export class CoreApiClient {
     await this.sdk.update('voice_voices', id, { $set: patch });
   }
 
-  /** Fetch a single voice_notes row by id. */
-  async getVoiceNote(id: string): Promise<VoiceNoteRow | null> {
+  /**
+   * Fetch a single voice_notes row by id.
+   *
+   * Forward the caller's authorization/cookie so the request runs under their
+   * identity (satisfies behavior.security userField owner check on voice_notes).
+   * The functional key is still carried via keepApiKey:true for audit headers.
+   */
+  async getVoiceNote(id: string, authorization?: string, cookie?: string): Promise<VoiceNoteRow | null> {
+    if (authorization || cookie) {
+      return this.sdk
+        .asUser({ authorization, cookie }, { keepApiKey: true })
+        .get<VoiceNoteRow>('voice_notes', id);
+    }
     return this.sdk.get<VoiceNoteRow>('voice_notes', id);
   }
 
