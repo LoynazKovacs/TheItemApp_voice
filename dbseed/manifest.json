@@ -14,7 +14,8 @@
         "key",
         "name",
         "description",
-        "permissions"
+        "permissions",
+        "appId"
       ]
     },
     {
@@ -22,7 +23,6 @@
       "file": "apps.json",
       "matchBy": "key",
       "installMode": "shared",
-      "exportFields": ["key", "name", "description", "icon", "enabled", "groupIds", "cantDelete"],
       "filter": { "key": "voice" }
     },
     {
@@ -167,16 +167,7 @@
       "collection": "voice_notes",
       "file": "data/voice_notes.json",
       "matchBy": "_id",
-      "installMode": "manualOrSystem",
-      "exportFields": [
-        "title",
-        "audioFileId",
-        "transcript",
-        "language",
-        "durationMs",
-        "mimeType",
-        "groupIds"
-      ]
+      "installMode": "manualOrSystem"
     },
     {
       "collection": "voice_voices",
