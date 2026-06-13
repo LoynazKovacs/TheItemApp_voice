@@ -40,6 +40,13 @@ export class UserVoicePrefsService {
   readonly autoMode = signal<boolean>(false);
   /** Hands-free trailing-silence delay (ms) before an utterance auto-sends. */
   readonly idleSendMs = signal<number>(2000);
+  /**
+   * Default speech-to-text language (ISO 639-1, e.g. "en", "hu"). Empty string
+   * means auto-detect. Mic/dictation prefabs use this as the language hint when
+   * the host doesn't pass an explicit one, so dictation stops misfiring into the
+   * wrong language.
+   */
+  readonly sttLanguage = signal<string>('');
 
   readonly loaded = signal<boolean>(false);
   readonly error = signal<string | null>(null);
@@ -96,11 +103,12 @@ export class UserVoicePrefsService {
       );
       const doc = Array.isArray(rows) ? (rows[0] as Record<string, unknown> | undefined) : undefined;
       const voice = (doc?.['voice'] as
-        | { selectedVoiceId?: unknown; speed?: number; autoMode?: boolean; idleSendMs?: number }
+        | { selectedVoiceId?: unknown; speed?: number; autoMode?: boolean; idleSendMs?: number; sttLanguage?: string }
         | undefined) ?? undefined;
       if (typeof voice?.speed === 'number') this.speed.set(voice.speed);
       if (typeof voice?.autoMode === 'boolean') this.autoMode.set(voice.autoMode);
       if (typeof voice?.idleSendMs === 'number') this.idleSendMs.set(voice.idleSendMs);
+      if (typeof voice?.sttLanguage === 'string') this.sttLanguage.set(voice.sttLanguage);
 
       // selectedVoiceId is an x-ref to voice_voices. The dynamic API populates
       // x-refs by default, so it usually comes back as an object `{_id, ...}`

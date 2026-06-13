@@ -41,6 +41,23 @@ export class VoiceMicButtonComponent implements OnDestroy {
   readonly language = input<string | null>(null);
   readonly label = input<string>('Push to talk');
 
+  constructor() {
+    // Warm the user-prefs singleton so the saved STT language default is
+    // resolved before the first push-to-talk transcription (see effectiveLanguage).
+    void this.prefs.ensureLoaded();
+  }
+
+  /**
+   * STT language hint to send with a recording: an explicit host-provided
+   * `language` input wins; otherwise fall back to the user's saved default
+   * (`user_ui_configs.voice.sttLanguage`); otherwise null = auto-detect.
+   * Without this fallback, recordings ship with no language and the recognizer
+   * frequently auto-detects the wrong language.
+   */
+  private effectiveLanguage(): string | null {
+    return this.language() || this.prefs.sttLanguage() || null;
+  }
+
   /**
    * Hands-free: milliseconds of trailing silence that ends an utterance.
    * `0` (default) means "use the user's `voice.idleSendMs` preference"; an
@@ -279,7 +296,7 @@ export class VoiceMicButtonComponent implements OnDestroy {
 
     try {
       const res = await this.api.stt(blob, {
-        language: this.language() || undefined,
+        language: this.effectiveLanguage() || undefined,
         task: 'transcribe',
         filename: `recording.${this.extFor(mimeType)}`,
       });
@@ -550,7 +567,7 @@ export class VoiceMicButtonComponent implements OnDestroy {
     this.cdr.markForCheck();
     try {
       const res = await this.api.stt(blob, {
-        language: this.language() || undefined,
+        language: this.effectiveLanguage() || undefined,
         task: 'transcribe',
         filename: `segment.${this.extFor(mimeType)}`,
       });

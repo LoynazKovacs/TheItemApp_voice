@@ -6,6 +6,7 @@ import { firstValueFrom } from 'rxjs';
 import { PLATFORM_REALTIME } from '@loynazkovacs/theitemapp-platform-sdk';
 import { VoiceApiService } from '../../services/voice-api.service';
 import { UserVoicePrefsService } from '../../services/user-voice-prefs.service';
+import { STT_LANGUAGE_OPTIONS } from '../../services/voice-languages';
 
 type VoiceRow = Readonly<{
   _id: string;
@@ -70,6 +71,10 @@ export class VoiceSettingsComponent implements OnInit {
   autoMode = signal<boolean>(false);
   /** Hands-free trailing-silence delay (ms) before an utterance auto-sends. */
   idleSendMs = signal<number>(2000);
+  /** Default speech-to-text language (ISO 639-1; '' = auto-detect). */
+  sttLanguage = signal<string>('');
+  /** Language options for the STT default selector (shared catalog). */
+  readonly languageOptions = STT_LANGUAGE_OPTIONS;
 
   /** _id of the user's user_ui_configs doc — needed to PATCH preferences. */
   private configDocId: string | null = null;
@@ -119,7 +124,7 @@ export class VoiceSettingsComponent implements OnInit {
       const configDoc = Array.isArray(configRes) ? (configRes[0] as Record<string, unknown> | undefined) : undefined;
       this.configDocId = typeof configDoc?.['_id'] === 'string' ? (configDoc['_id'] as string) : null;
       const voicePref = (configDoc?.['voice'] as
-        | { selectedVoiceId?: unknown; speed?: number; autoMode?: boolean; idleSendMs?: number }
+        | { selectedVoiceId?: unknown; speed?: number; autoMode?: boolean; idleSendMs?: number; sttLanguage?: string }
         | undefined) ?? undefined;
       const rawSel = voicePref?.selectedVoiceId;
       // user_ui_configs.voice.selectedVoiceId is an x-ref to voice_voices —
@@ -134,6 +139,7 @@ export class VoiceSettingsComponent implements OnInit {
       if (typeof voicePref?.speed === 'number') this.speed.set(voicePref.speed);
       if (typeof voicePref?.autoMode === 'boolean') this.autoMode.set(voicePref.autoMode);
       if (typeof voicePref?.idleSendMs === 'number') this.idleSendMs.set(voicePref.idleSendMs);
+      if (typeof voicePref?.sttLanguage === 'string') this.sttLanguage.set(voicePref.sttLanguage);
     } catch (err) {
       this.loadError.set(err instanceof Error ? err.message : String(err));
     } finally {
@@ -174,6 +180,18 @@ export class VoiceSettingsComponent implements OnInit {
     const ok = await this.patchConfig({ 'voice.autoMode': v });
     if (!ok) {
       this.autoMode.set(previous);
+      this.cdr.markForCheck();
+    }
+  }
+
+  async setSttLanguage(code: string): Promise<void> {
+    const next = typeof code === 'string' ? code : '';
+    const previous = this.sttLanguage();
+    this.sttLanguage.set(next);
+    this.cdr.markForCheck();
+    const ok = await this.patchConfig({ 'voice.sttLanguage': next });
+    if (!ok) {
+      this.sttLanguage.set(previous);
       this.cdr.markForCheck();
     }
   }

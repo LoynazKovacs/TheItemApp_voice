@@ -1,9 +1,11 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, CUSTOM_ELEMENTS_SCHEMA, OnDestroy, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, CUSTOM_ELEMENTS_SCHEMA, OnDestroy, OnInit, inject, input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { VoiceApiService } from '../../services/voice-api.service';
+import { UserVoicePrefsService } from '../../services/user-voice-prefs.service';
+import { STT_LANGUAGE_OPTIONS } from '../../services/voice-languages';
 
 type DictaphoneState = 'idle' | 'recording' | 'recorded' | 'transcribing' | 'saving' | 'saved';
 
@@ -41,10 +43,11 @@ interface ImportJob {
   changeDetection: ChangeDetectionStrategy.OnPush,
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
-export class VoiceDictaphoneComponent implements OnDestroy {
+export class VoiceDictaphoneComponent implements OnInit, OnDestroy {
   private readonly api = inject(VoiceApiService);
   private readonly http = inject(HttpClient);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly prefs = inject(UserVoicePrefsService);
 
   readonly windowId = input<string>('');
   readonly language = input<string | null>(null);
@@ -67,31 +70,25 @@ export class VoiceDictaphoneComponent implements OnDestroy {
   recent = signal<readonly { id: string; title: string; at: number }[]>([]);
 
   /** Optional language hint applied to BOTH recording-STT and drop-zone imports.
-   *  Empty string = auto-detect. Overrides the `language` component input when set. */
+   *  Empty string = auto-detect. Overrides the `language` component input when set.
+   *  Seeded from the user's saved default (user_ui_configs.voice.sttLanguage) on init. */
   selectedLanguage = signal<string>('');
 
-  /** Languages offered in the optional selector. Keep small — faster-whisper
-   *  supports ~100 but exposing them all is overwhelming. Empty value = auto. */
-  readonly languageOptions: ReadonlyArray<{ code: string; label: string }> = [
-    { code: '',   label: 'Auto-detect' },
-    { code: 'hu', label: 'Magyar' },
-    { code: 'en', label: 'English' },
-    { code: 'de', label: 'Deutsch' },
-    { code: 'es', label: 'Español' },
-    { code: 'fr', label: 'Français' },
-    { code: 'it', label: 'Italiano' },
-    { code: 'pt', label: 'Português' },
-    { code: 'nl', label: 'Nederlands' },
-    { code: 'pl', label: 'Polski' },
-    { code: 'ro', label: 'Română' },
-    { code: 'sk', label: 'Slovenčina' },
-    { code: 'cs', label: 'Čeština' },
-    { code: 'ru', label: 'Русский' },
-    { code: 'uk', label: 'Українська' },
-    { code: 'tr', label: 'Türkçe' },
-    { code: 'ja', label: '日本語' },
-    { code: 'zh', label: '中文' },
-  ];
+  /** Languages offered in the optional selector — shared catalog so the
+   *  dictaphone and the voice-settings default selector stay in sync. Empty
+   *  value = auto-detect. */
+  readonly languageOptions = STT_LANGUAGE_OPTIONS;
+
+  ngOnInit(): void {
+    // Adopt the user's saved STT-language default so the selector reflects it
+    // (the user can still override per-recording). Awaited so the signal is
+    // resolved before the first capture.
+    void this.prefs.ensureLoaded().then(() => {
+      const pref = this.prefs.sttLanguage();
+      if (pref) this.selectedLanguage.set(pref);
+      this.cdr.markForCheck();
+    });
+  }
 
   /** Effective language hint: user selection wins, then the component input,
    *  then nothing (let faster-whisper auto-detect). */

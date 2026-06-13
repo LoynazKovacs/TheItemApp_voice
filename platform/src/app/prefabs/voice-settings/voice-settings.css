@@ -80,6 +80,16 @@
   min-width: 260px;
 }
 
+.langSelect {
+  min-width: 220px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border, rgba(127, 127, 127, 0.3));
+  background: var(--surface, rgba(127, 127, 127, 0.06));
+  color: inherit;
+  font-size: 13px;
+}
+
 .speedRow {
   display: flex;
   align-items: center;

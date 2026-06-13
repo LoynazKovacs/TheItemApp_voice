@@ -55,6 +55,25 @@
   </section>
 
   <section class="vsPanel">
+    <h3>Speech-to-text</h3>
+    <p class="hint">Language used when transcribing your dictation. Auto-detect lets the recognizer guess, which can misfire and return the wrong language — pick your language to force it.</p>
+    <div class="row">
+      <label class="field">
+        <span>Dictation language</span>
+        <select
+          class="langSelect"
+          [ngModel]="sttLanguage()"
+          (ngModelChange)="setSttLanguage($event)"
+        >
+          @for (opt of languageOptions; track opt.code) {
+            <option [value]="opt.code">{{ opt.label }}</option>
+          }
+        </select>
+      </label>
+    </div>
+  </section>
+
+  <section class="vsPanel">
     <header class="panelHeader">
       <h3>Voice</h3>
       @if (selectedRow(); as cur) {
