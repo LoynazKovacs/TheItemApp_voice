@@ -1,7 +1,7 @@
 {
   "version": 2,
   "appKey": "voice",
-  "appVersion": "1.1.0",
+  "appVersion": "1.1.1",
   "engineRequires": ">=1.0.0",
   "requiresCore": true,
   "collections": [
