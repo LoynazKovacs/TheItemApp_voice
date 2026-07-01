@@ -200,7 +200,7 @@
     {
       "collection": "actions",
       "file": "actions.json",
-      "matchBy": "key",
+      "matchBy": "_id",
       "installMode": "shared",
       "exportFields": [
         "key",
