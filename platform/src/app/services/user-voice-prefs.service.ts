@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Observable, Subscription, firstValueFrom } from 'rxjs';
+import { PLATFORM_DOCUMENT_STORE } from '@loynazkovacs/theitemapp-platform-sdk';
 
 /**
  * Minimal host-provided realtime API. Mirrors `PlatformRealtime` from the
@@ -31,6 +32,7 @@ export interface VoicePrefsRealtime {
 @Injectable({ providedIn: 'root' })
 export class UserVoicePrefsService {
   private readonly http = inject(HttpClient);
+  private readonly store = inject(PLATFORM_DOCUMENT_STORE);
 
   /** Resolved OmniVoice profile id, or null when no pref / still loading. */
   readonly profileId = signal<string | null>(null);
@@ -130,10 +132,8 @@ export class UserVoicePrefsService {
       if (inlineProfileId) {
         this.profileId.set(inlineProfileId);
       } else if (vid && /^[0-9a-f]{24}$/i.test(vid)) {
-        const voiceRow = await firstValueFrom(
-          this.http.get<unknown>(`/api/dynamic/voice_voices/${vid}`),
-        );
-        const profile = (voiceRow as { profileId?: string } | undefined)?.profileId;
+        const voiceRow = await this.store.getNow<{ profileId?: string }>('voice_voices', vid);
+        const profile = voiceRow?.profileId;
         if (typeof profile === 'string' && profile) this.profileId.set(profile);
       }
     } catch (err) {
