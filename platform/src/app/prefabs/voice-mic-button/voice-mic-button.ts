@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, HostListener, OnDestroy, EventEmitter, Output, inject, input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { PLATFORM_REALTIME } from '@loynazkovacs/theitemapp-platform-sdk';
 import { VoiceApiService } from '../../services/voice-api.service';
 import { UserVoicePrefsService } from '../../services/user-voice-prefs.service';
 
@@ -29,7 +28,6 @@ import { UserVoicePrefsService } from '../../services/user-voice-prefs.service';
   selector: 'voice-mic-button',
   standalone: true,
   imports: [CommonModule],
-  providers: [UserVoicePrefsService],
   templateUrl: './voice-mic-button.html',
   styleUrl: './voice-mic-button.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -38,21 +36,13 @@ export class VoiceMicButtonComponent implements OnDestroy {
   private readonly api = inject(VoiceApiService);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly prefs = inject(UserVoicePrefsService);
-  /**
-   * Host-provided realtime, forwarded into the (now component-provided) prefs
-   * service so this instance re-loads when voice-settings mutates
-   * `user_ui_configs` — keeping the STT-language / idle-send defaults in sync
-   * across separate prefab instances. See UserVoicePrefsService.bindRealtime.
-   */
-  private readonly platformRealtime = inject(PLATFORM_REALTIME, { optional: true });
 
   readonly windowId = input<string>('');
   readonly language = input<string | null>(null);
   readonly label = input<string>('Push to talk');
 
   constructor() {
-    this.prefs.bindRealtime(this.platformRealtime ?? null);
-    // Warm the user-prefs service so the saved STT language default is
+    // Warm the user-prefs singleton so the saved STT language default is
     // resolved before the first push-to-talk transcription (see effectiveLanguage).
     void this.prefs.ensureLoaded();
   }

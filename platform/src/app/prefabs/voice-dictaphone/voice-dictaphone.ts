@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-import { PLATFORM_REALTIME } from '@loynazkovacs/theitemapp-platform-sdk';
 import { VoiceApiService } from '../../services/voice-api.service';
 import { UserVoicePrefsService } from '../../services/user-voice-prefs.service';
 import { STT_LANGUAGE_OPTIONS } from '../../services/voice-languages';
@@ -39,7 +38,6 @@ interface ImportJob {
   selector: 'voice-dictaphone',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  providers: [UserVoicePrefsService],
   templateUrl: './voice-dictaphone.html',
   styleUrl: './voice-dictaphone.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -50,13 +48,6 @@ export class VoiceDictaphoneComponent implements OnInit, OnDestroy {
   private readonly http = inject(HttpClient);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly prefs = inject(UserVoicePrefsService);
-  /**
-   * Host-provided realtime, forwarded into the (now component-provided) prefs
-   * service so this instance re-loads when voice-settings mutates
-   * `user_ui_configs` — keeping the saved STT-language default in sync across
-   * separate prefab instances. See UserVoicePrefsService.bindRealtime.
-   */
-  private readonly platformRealtime = inject(PLATFORM_REALTIME, { optional: true });
 
   readonly windowId = input<string>('');
   readonly language = input<string | null>(null);
@@ -89,7 +80,6 @@ export class VoiceDictaphoneComponent implements OnInit, OnDestroy {
   readonly languageOptions = STT_LANGUAGE_OPTIONS;
 
   ngOnInit(): void {
-    this.prefs.bindRealtime(this.platformRealtime ?? null);
     // Adopt the user's saved STT-language default so the selector reflects it
     // (the user can still override per-recording). Awaited so the signal is
     // resolved before the first capture.

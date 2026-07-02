@@ -28,14 +28,7 @@ import { PLATFORM_DOCUMENT_STORE } from '@loynazkovacs/theitemapp-platform-sdk';
  *    computed from those store rows. Ids the batch doesn't return are
  *    negative-cached (`seed(..., null)`) so a miss is never re-fetched.
  */
-// Component-provided (NOT providedIn:'root'): this service injects
-// PLATFORM_DOCUMENT_STORE, which core supplies to a federated prefab's ELEMENT
-// injector via prefab-host. A root-provided service would resolve in the
-// remote's own environment injector (no PLATFORM_* tokens) → NG0201. So it is
-// listed in the consuming prefabs' `providers`. Its only per-instance state is
-// the `modelDefs` map; the ref-row cache lives in the shared core DocumentStore
-// singleton, so separate per-prefab instances all read/write the same rows.
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class RefResolverService {
   private readonly http = inject(HttpClient);
   private readonly store = inject(PLATFORM_DOCUMENT_STORE);
