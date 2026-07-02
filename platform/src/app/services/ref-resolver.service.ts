@@ -1,7 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { PLATFORM_DOCUMENT_STORE } from '@loynazkovacs/theitemapp-platform-sdk';
 
 /**
  * Frontend-direct chip-ref → display label resolver.
@@ -17,60 +16,48 @@ import { PLATFORM_DOCUMENT_STORE } from '@loynazkovacs/theitemapp-platform-sdk';
  *    (class identity differs across module graphs), so we keep this tiny
  *    self-contained implementation in the voice repo.
  *
- * Cache strategy (mirrors core's `RefLabelService`):
+ * Cache strategy:
  *  - Model definitions: one bulk fetch of `/api/dynamic/items?_l=500` on
  *    first call, kept for the lifetime of the page.
- *  - Per-ref rows: rehomed onto the shared SDK `PLATFORM_DOCUMENT_STORE`.
- *    Missing ids are batch-fetched via `?_ids=` (one request for N ids — the
- *    store has no cross-document batching of its own) and each row is fed into
- *    the store via `seed`, so it lives as a single cached, socket-live entry
- *    shared with every other surface (chips, show prefabs, …). Labels are then
- *    computed from those store rows. Ids the batch doesn't return are
- *    negative-cached (`seed(..., null)`) so a miss is never re-fetched.
+ *  - Per-ref labels: keyed by `modelKey/id`. Empty-string sentinel means
+ *    "looked up, no label available — strip" so we never re-fetch a miss.
  */
 @Injectable({ providedIn: 'root' })
 export class RefResolverService {
   private readonly http = inject(HttpClient);
-  private readonly store = inject(PLATFORM_DOCUMENT_STORE);
 
   private readonly modelDefs = new Map<string, ModelDef>();
   private modelDefsPromise: Promise<void> | null = null;
 
+  private readonly labelCache = new Map<string, string>();
+  /** In-flight per-collection batch fetches, keyed by collection. */
+  private readonly inFlight = new Map<string, Promise<void>>();
+
   /**
    * Resolve as many of the given refs as possible. Returns a snapshot map of
-   * labels for the requested refs (including empty strings for known misses,
-   * so the sanitiser strips them). Callers can pass this directly to
-   * `sanitizeForTts`.
+   * the current label cache for the requested refs (including empty strings
+   * for known misses). Callers can pass this directly to `sanitizeForTts`.
    */
   async resolve(refs: readonly string[]): Promise<Map<string, string>> {
     const out = new Map<string, string>();
     if (!refs.length) return out;
 
-    // De-dupe + validate. Bucket by collection only the ids the store isn't
-    // already tracking, so a batch `?_ids=` fetch pulls just the misses.
-    type Parsed = { ref: string; coll: string; id: string };
-    const parsed: Parsed[] = [];
+    // De-dupe and bucket by collection. Skip refs already cached.
     const buckets = new Map<string, Set<string>>();
     const seen = new Set<string>();
     for (const ref of refs) {
       if (seen.has(ref)) continue;
       seen.add(ref);
+      if (this.labelCache.has(ref)) continue;
       const slash = ref.indexOf('/');
       if (slash <= 0) continue;
       const coll = ref.substring(0, slash);
       const id = ref.substring(slash + 1);
       if (!/^[0-9a-f]{24}$/i.test(id)) continue;
-      parsed.push({ ref, coll, id });
-      if (this.store.peek(coll, id) === undefined) {
-        // Placeholder + `settled` promise so a concurrent resolve/getNow
-        // coalesces onto the imminent batch seed instead of racing it.
-        this.store.seed(coll, id, undefined);
-        let bucket = buckets.get(coll);
-        if (!bucket) { bucket = new Set(); buckets.set(coll, bucket); }
-        bucket.add(id);
-      }
+      let bucket = buckets.get(coll);
+      if (!bucket) { bucket = new Set(); buckets.set(coll, bucket); }
+      bucket.add(id);
     }
-    if (!parsed.length) return out;
 
     if (buckets.size) {
       await this.ensureModelDefs();
@@ -81,15 +68,11 @@ export class RefResolverService {
       );
     }
 
-    // Build snapshot from the store (getNow awaits any placeholder still
-    // settling from a concurrent batch). Missing row → '' sentinel (strip).
-    await Promise.all(
-      parsed.map(async ({ ref, coll, id }) => {
-        const row = await this.store.getNow<Record<string, unknown>>(coll, id);
-        const label = row ? labelForRow(this.modelDefs.get(coll), row) : null;
-        out.set(ref, label ?? '');
-      }),
-    );
+    // Build snapshot.
+    for (const ref of seen) {
+      const v = this.labelCache.get(ref);
+      if (typeof v === 'string') out.set(ref, v);
+    }
     return out;
   }
 
@@ -120,36 +103,45 @@ export class RefResolverService {
     return this.modelDefsPromise;
   }
 
-  /**
-   * Batch-fetch `ids` of `collection` via `?_ids=` and feed each row into the
-   * shared store (`seed`). Ids the batch doesn't return are negative-cached so
-   * their placeholder `settled` promise resolves and getNow doesn't hang.
-   */
   private async fetchCollection(collection: string, ids: string[]): Promise<void> {
     if (!ids.length) return;
-    try {
-      const rows = await firstValueFrom(
-        this.http.get<unknown>(`/api/dynamic/${encodeURIComponent(collection)}`, {
-          params: { _ids: ids.join(','), _l: ids.length },
-        }),
-      );
-      const returned = new Set<string>();
-      if (Array.isArray(rows)) {
+    // De-dupe in-flight fetches per collection (rare, but possible when two
+    // ensureRefsResolved calls overlap before either has populated cache).
+    const key = `${collection}::${ids.slice().sort().join(',')}`;
+    const existing = this.inFlight.get(key);
+    if (existing) return existing;
+
+    // Mark every requested id as in-flight (empty sentinel) so concurrent
+    // callers don't re-fire the same fetch.
+    for (const id of ids) {
+      const ref = `${collection}/${id}`;
+      if (!this.labelCache.has(ref)) this.labelCache.set(ref, '');
+    }
+
+    const p = (async () => {
+      try {
+        const rows = await firstValueFrom(
+          this.http.get<unknown>(`/api/dynamic/${encodeURIComponent(collection)}`, {
+            params: { _ids: ids.join(','), _l: ids.length },
+          }),
+        );
+        if (!Array.isArray(rows)) return;
+        const def = this.modelDefs.get(collection);
         for (const row of rows) {
           const id = extractId((row as any)?._id);
           if (!id) continue;
-          returned.add(id);
-          this.store.seed<Record<string, unknown>>(collection, id, row as Record<string, unknown>);
+          const ref = `${collection}/${id}`;
+          const label = labelForRow(def, row as Record<string, unknown>);
+          if (label) this.labelCache.set(ref, label);
         }
+      } catch {
+        // Leave sentinels in place — sanitiser will strip on empty.
+      } finally {
+        this.inFlight.delete(key);
       }
-      // Negative-cache anything not returned (resolves its placeholder).
-      for (const id of ids) {
-        if (!returned.has(id)) this.store.seed<Record<string, unknown>>(collection, id, null);
-      }
-    } catch {
-      // Resolve every placeholder to `missing` so getNow settles (strip).
-      for (const id of ids) this.store.seed<Record<string, unknown>>(collection, id, null);
-    }
+    })();
+    this.inFlight.set(key, p);
+    return p;
   }
 }
 
