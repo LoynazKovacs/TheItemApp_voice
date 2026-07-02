@@ -36,6 +36,7 @@ type VoiceRow = Readonly<{
   selector: 'voice-settings',
   standalone: true,
   imports: [CommonModule, FormsModule],
+  providers: [UserVoicePrefsService],
   templateUrl: './voice-settings.html',
   styleUrl: './voice-settings.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -25,11 +25,19 @@ export interface VoicePrefsRealtime {
  * `profileId` (not the row id) to send to `/voice-api/api/tts`, so this
  * service resolves the x-ref hop on first load and caches both ids.
  *
- * Singleton at root: every voice-speaker / voice-studio / settings UI on
- * the page shares the same fetched state. First consumer kicks off the
- * load; subsequent consumers read the resolved signals.
+ * Component-provided (NOT providedIn:'root'): this service injects
+ * PLATFORM_DOCUMENT_STORE, which core supplies to a federated prefab's ELEMENT
+ * injector via prefab-host. A root-provided service would resolve in the
+ * remote's own environment injector (no PLATFORM_* tokens) → NG0201. So it is
+ * listed in the consuming prefabs' `providers`.
+ *
+ * Because each consuming prefab now gets its own instance (rather than one root
+ * singleton), the cross-prefab preference signals stay in sync via the
+ * `bindRealtime` hook: every consumer subscribes to `user_ui_configs` events,
+ * so a change made in voice-settings re-loads every other prefab's instance
+ * from the DB. All four consuming prefabs bind realtime for this reason.
  */
-@Injectable({ providedIn: 'root' })
+@Injectable()
 export class UserVoicePrefsService {
   private readonly http = inject(HttpClient);
   private readonly store = inject(PLATFORM_DOCUMENT_STORE);

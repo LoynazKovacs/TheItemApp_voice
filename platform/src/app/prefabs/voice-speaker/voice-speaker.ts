@@ -86,6 +86,7 @@ export function sanitizeForTts(input: string, refLabels?: Map<string, string> | 
   selector: 'voice-speaker',
   standalone: true,
   imports: [CommonModule],
+  providers: [RefResolverService, UserVoicePrefsService],
   templateUrl: './voice-speaker.html',
   styleUrl: './voice-speaker.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
